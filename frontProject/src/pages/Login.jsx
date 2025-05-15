@@ -1,5 +1,8 @@
 import React from 'react';
 import '../css/Login.css'; // Adjust the path as necessary
+import { Link } from 'react-router-dom';
+
+
 
 const Login = () => {
     return (
@@ -16,7 +19,7 @@ const Login = () => {
                         <input type="password" id="password" name="password" placeholder="Enter your password" required />
                     </div>
                     <button type="submit" className="login-button">Login</button>
-                    <button type="submit" className="signup-button">Signup</button>
+                    <Link to="/signup">회원가입</Link>
                 </form>
             </div>
         </div>
