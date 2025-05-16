@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontProject
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontProject:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=5173
+    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - app-network
+    # depends_on:
+    #   - backend
+
+  # backend:
+  #   build:
+  #     context: ./backProject
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: production
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-local:5432/myproject_local_db
+  #     SPRING_DATASOURCE_USERNAME: localuser
+  #     SPRING_DATASOURCE_PASSWORD: localpassword
+  #   depends_on:
+  #     - postgres-local
+  #   networks:
+  #     - app-network
+
+  postgres-local:
+    container_name: myproject-postgres-local
+    image: postgres:17.4-alpine
+    # 저는 windows에 이미 postgresql을 사용중이라 5433이라고 지정해 놓았지만 그렇지 않은 경우 5432:5432로 변경하세요.
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=localuser
+      - POSTGRES_PASSWORD=localpassword
+      - POSTGRES_DB=myproject_local_db
+      - TZ=Asia/Seoul
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data_local:
