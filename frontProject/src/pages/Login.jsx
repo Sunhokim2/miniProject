@@ -19,7 +19,10 @@ const Login = () => {
                         <input type="password" id="password" name="password" placeholder="Enter your password" required />
                     </div>
                     <button type="submit" className="login-button">Login</button>
-                    <Link to="/signup">회원가입</Link>
+                    <Link to="/signup">
+                    회원가입
+                        {/* <Button>회원가입</Button> */}
+                    </Link>
                 </form>
             </div>
         </div>
