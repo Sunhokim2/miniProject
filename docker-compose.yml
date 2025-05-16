@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  postgres-local:
+    image: postgres:14.7
+    container_name: ${COMPOSE_PROJECT_NAME}-postgres-local
+    environment:
+      POSTGRES_USER: ${DB_USER_LOCAL}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_LOCAL}
+      POSTGRES_DB: ${DB_NAME_LOCAL}
+      TZ: Asia/Seoul
+    ports:
+      - "${DB_PORT_LOCAL_HOST}:5432"
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data_local:
