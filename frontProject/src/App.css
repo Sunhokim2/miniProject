@@ -5,47 +5,13 @@
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
 .detail-label {
-  width: 100px;
+  width: 65px;
   text-align: right;
   color: #6c757d;
   font-weight: 600;
   margin-right: 1rem;
+  align-items:start;
 }
 
 .detailed-page-image {
@@ -54,4 +20,63 @@
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+.bookmark-button {
+  font-size: 28px;
+  background: transparent;
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.bookmark-button.gold {
+  color: gold;
+}
+
+.bookmark-button.gray {
+  color: lightgray;
+}
+.badge-category-restaurant {
+  color: #dc3545;
+  border: 1px solid #dc3545;
+  background-color: #dc3545;
+}
+.badge-category-cafe {
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+  background-color: #0d6efd;
+}
+
+.card-img-top {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+/* 카테고리 배지 - 음식점 */
+.badge-category-restaurant {
+  display: inline-block;
+  padding: 0.4em 0.8em;
+  font-size: 0.8rem;
+  color: #fff;
+  background-color: #e74c3c;
+  border-radius: 0.5rem;
+  width: auto;
+  max-width: max-content;
+  text-align: center;
+}
+
+/* 카테고리 배지 - 카페 */
+.badge-category-cafe {
+  display: inline-block;
+  padding: 0.4em 0.8em;
+  font-size: 0.8rem;
+  color: #fff;
+  background-color: #3498db;
+  border-radius: 0.5rem;
+  width: auto;
+  max-width: max-content;
+  text-align: center;
 }

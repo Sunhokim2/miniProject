@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import regionColors from './korea_regions_colors.json';
+
 const DetailedPage = () => {
   //   const placeData = {
   //     id: 1,
@@ -26,7 +29,7 @@ const DetailedPage = () => {
   //       },
   //     ],
   //   };
-  const placeData = {
+  const placeData1 = {
     id: 3,
     imageUrl:
       "https://cdn.imweb.me/upload/S2024013025a8a2a1c6644/13570ac6b056e.png",
@@ -42,7 +45,8 @@ const DetailedPage = () => {
     source: "https://blog.naver.com/wlgus3651/223570456098",
     status: "방문함",
     bookmarked: false,
-    visited: true,
+    visited: false,
+    map_url: "https://maps.app.goo.gl/moQBvBbAcm33HXmK9",
     created_at: "2024-09-03",
     user_posts: [
       {
@@ -53,15 +57,59 @@ const DetailedPage = () => {
       },
     ],
   };
+  //placeData 데이터 BE 에서 JSON으로 받아오기
+  const [placeData, setPlaceData] = useState(null);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/place/3")
+      .then((res) => res.json())
+      .then((data) => setPlaceData(data))
+      .catch((error) => {
+        console.error("데이터 불러오기 실패:", error);
+      });
+  }, []);
+  if (!placeData) {
+    return <div>로딩 중...</div>;
+  }
+
+  const toggleVisited = () => {
+    setPlaceData((prev) => ({ ...prev, visited: !prev.visited }));
+  };
+
+  const toggleBookmarked = () => {
+    setPlaceData((prev) => ({ ...prev, bookmarked: !prev.bookmarked }));
+  };
   const renderStars = (rate) => "⭐️".repeat(rate);
 
   return (
     <div className="container-fluid d-flex justify-content-center">
       <div
-        className="mt-5 p-4 border rounded shadow-sm bg-light"
+        className="mt-4 p-5 border rounded shadow-sm bg-light"
         style={{ width: "100%", maxWidth: "650px" }}
       >
-        <h1 className="mb-4 text-start">{placeData.restaurant}</h1>
+        <div className="text-start mb-2">
+          <button
+            className="btn btn-link p-0 d-flex align-items-center"
+            onClick={() => window.history.back()}
+            style={{ textDecoration: "none", color: "gray", fontSize: "15px" }}
+          >
+            ← 돌아가기
+          </button>
+        </div>
+        <div className="d-flex justify-content-between align-items-start mb-5">
+          <h1 className="mb-0">{placeData.restaurant}</h1>
+          <div className="d-flex gap-2">
+            <button
+              className={`bookmark-button ${
+                placeData.bookmarked ? "gold" : "gray"
+              }`}
+              onClick={toggleBookmarked}
+              aria-label="Bookmark"
+            >
+              {placeData.bookmarked ? "★" : "☆"}
+            </button>
+          </div>
+        </div>
         <img
           src={placeData.imageUrl}
           alt={placeData.restaurant}
@@ -69,16 +117,29 @@ const DetailedPage = () => {
         />
         <div className="d-flex mb-2">
           <div className="detail-label">카테고리: </div>
-          <div>
-            <span className="badge bg-light text-danger border border-danger me-2">
+          <div className="d-flex justify-content-between">
+            <span
+              className={`badge ${
+                placeData.category.trim() === "음식점"
+                  ? "badge-category-restaurant"
+                  : "badge-category-cafe"
+              } me-2`}
+            >
               {placeData.category}
             </span>
           </div>
         </div>
         <div className="d-flex mb-2">
           <div className="detail-label">지역: </div>
-          <div>
-            <span className="badge bg-light text-danger border border-danger detail-content">
+          <div className="">
+            <span
+              className="badge detail-content"
+              style={{
+                backgroundColor: regionColors[placeData.region] || "#ccc",
+                color: "#fff",
+                border: `1px solid ${regionColors[placeData.region] || "#ccc"}`,
+              }}
+            >
               {placeData.region}
             </span>
           </div>
@@ -92,12 +153,19 @@ const DetailedPage = () => {
           <div>{placeData.address}</div>
         </div>
         <div className="d-flex mb-2">
-          <div className="detail-label">방문 여부: </div>
-          <div>{placeData.visited ? "✅ 방문함" : "❌ 미방문"}</div>
-        </div>
-        <div className="d-flex mb-2">
           <div className="detail-label">평점: </div>
           <div>{renderStars(placeData.rate)}</div>
+        </div>
+        <div className="d-flex mb-2">
+          <div className="detail-label">구글 지도: </div>
+          <a
+            href={placeData.map_url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-decoration-none text-primary"
+          >
+            링크
+          </a>
         </div>
         <div className="d-flex mb-2">
           <div className="detail-label">출처: </div>
@@ -111,8 +179,17 @@ const DetailedPage = () => {
           </a>
         </div>
         <div className="d-flex mb-2">
-          <div>{placeData.body}</div>
+          <div className="detail-label"></div>
+          <div className="text-start mt-3">{placeData.body}</div>
         </div>
+        <button
+          className={`btn btn-sm mt-3 ${
+            placeData.visited ? "btn-success" : "btn-outline-secondary"
+          }`}
+          onClick={toggleVisited}
+        >
+          {placeData.visited ? "✅ 방문함" : "❌ 미방문"}
+        </button>
       </div>
     </div>
   );
