@@ -2,12 +2,12 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 interface User {
   id: number;
+  user_name: string;
   email: string;
-  nickname: string;
-  profileImage: string;
+  password: string;
+  email_verified: boolean;
   role: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
 }
 
 interface AuthContextType {
@@ -17,7 +17,7 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  signup: (email: string, password: string, nickname: string) => Promise<void>;
+  signup: (email: string, password: string, user_name: string) => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -27,12 +27,12 @@ interface AuthProviderProps {
 // Mock 데이터
 const mockUser: User = {
   id: 1,
+  user_name: '테스트 사용자',
   email: 'test@example.com',
-  nickname: '테스트 사용자',
-  profileImage: 'https://via.placeholder.com/150',
+  password: 'hashed_password',
+  email_verified: true,
   role: 'USER',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  created_at: new Date().toISOString()
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,10 +54,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      // TODO: 실제 API 호출로 대체
+      
+      // 개발 환경에서는 mockup 사용자로 로그인
       if (import.meta.env.DEV) {
+        console.log('개발 환경: Mockup 사용자로 로그인');
         setUser(mockUser);
+        return;
       }
+      
+      // TODO: 실제 API 호출로 대체
+      throw new Error('API가 구현되지 않았습니다.');
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.');
       throw err;
@@ -80,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signup = async (email: string, password: string, nickname: string) => {
+  const signup = async (email: string, password: string, user_name: string) => {
     try {
       setIsLoading(true);
       setError(null);

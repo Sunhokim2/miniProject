@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Restaurant } from '@/types';
-import { getRestaurants } from '@/services/restaurantService';
+import { Restaurant } from '@/mocks/restaurants';
+import { Post } from '@/mocks/posts';
+import { restaurants } from '@/mocks/restaurants';
+import { posts } from '@/mocks/posts';
 import MapControls from '@/components/map/MapControls';
 import RestaurantMarker from '@/components/map/RestaurantMarker';
 import RestaurantDetail from '@/components/restaurants/RestaurantDetail';
@@ -29,17 +31,21 @@ const MapPage = () => {
     longitude: 126.9780,
   });
 
-  // React Query로 레스토랑 데이터 가져오기
-  const { data, isLoading, error } = useQuery({
+  // 더미데이터 사용
+  const { data: restaurantData, isLoading, error } = useQuery({
     queryKey: ['restaurants'],
-    queryFn: () => getRestaurants(),
+    queryFn: () => Promise.resolve({ data: restaurants }),
+  });
+
+  const { data: postData } = useQuery({
+    queryKey: ['posts'],
+    queryFn: () => Promise.resolve({ data: posts }),
   });
 
   // 네이버 지도 초기화
   useEffect(() => {
     if (!mapRef.current || !window.naver) return;
 
-    // TODO: 네이버 지도 API 초기화
     const mapOptions = {
       center: new window.naver.maps.LatLng(mapCenter.latitude, mapCenter.longitude),
       zoom: 14,
@@ -68,7 +74,6 @@ const MapPage = () => {
     }
 
     return () => {
-      // Clean up
       if (naverMapRef.current) {
         naverMapRef.current = null;
       }
@@ -77,11 +82,29 @@ const MapPage = () => {
 
   // 마커 표시하기
   useEffect(() => {
-    if (!naverMapRef.current || !data?.data) return;
+    if (!naverMapRef.current || !restaurantData?.data) return;
 
-    // TODO: 마커 생성 및 표시 로직
-    // 여기서 Restaurant 데이터를 사용하여 마커 생성
-  }, [data, naverMapRef.current]);
+    const markers: any[] = [];
+
+    restaurantData.data.forEach((restaurant) => {
+      const marker = new window.naver.maps.Marker({
+        position: new window.naver.maps.LatLng(restaurant.latitude, restaurant.longitude),
+        map: naverMapRef.current,
+        title: restaurant.restaurant,
+      });
+
+      // 마커 클릭 이벤트
+      window.naver.maps.Event.addListener(marker, 'click', () => {
+        handleSelectRestaurant(restaurant);
+      });
+
+      markers.push(marker);
+    });
+
+    return () => {
+      markers.forEach(marker => marker.setMap(null));
+    };
+  }, [restaurantData]);
 
   // 레스토랑 선택 핸들러
   const handleSelectRestaurant = (restaurant: Restaurant) => {

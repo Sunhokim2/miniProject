@@ -1,7 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getRestaurants } from '@/services/restaurantService';
-import { Restaurant } from '@/types';
+import { Restaurant } from '@/mocks/restaurants';
+import { Post } from '@/mocks/posts';
+import { restaurants } from '@/mocks/restaurants';
+import { posts } from '@/mocks/posts';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import RestaurantDetail from '@/components/restaurants/RestaurantDetail';
 import SearchInput from '@/components/common/SearchInput';
@@ -27,22 +29,20 @@ const FeedPage = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastRestaurantRef = useRef<HTMLDivElement | null>(null);
 
-  // 레스토랑 데이터 조회
-  const { data, isLoading, error, isFetching } = useQuery({
-    queryKey: ['restaurants', { page, searchKeyword, sortBy, filters }],
-    queryFn: () => getRestaurants({ 
-      page, 
-      search: searchKeyword,
-      limit: 10,
-      sortBy,
-      // 기타 필터 파라미터
-    }),
-    keepPreviousData: true,
+  // 더미데이터 사용
+  const { data: restaurantData, isLoading: isRestaurantLoading, error: restaurantError } = useQuery({
+    queryKey: ['restaurants'],
+    queryFn: () => Promise.resolve({ data: restaurants }),
+  });
+
+  const { data: postData, isLoading: isPostLoading, error: postError } = useQuery({
+    queryKey: ['posts'],
+    queryFn: () => Promise.resolve({ data: posts }),
   });
 
   // 무한 스크롤 처리
   const lastRestaurantCallback = useCallback((node: HTMLDivElement | null) => {
-    if (isFetching) return;
+    if (isRestaurantLoading || isPostLoading) return;
     
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -58,14 +58,14 @@ const FeedPage = () => {
       lastRestaurantRef.current = node;
       observerRef.current.observe(node);
     }
-  }, [isFetching, hasNextPage]);
+  }, [isRestaurantLoading, isPostLoading, hasNextPage]);
 
   // 데이터가 변경될 때 다음 페이지 여부 확인
   useEffect(() => {
-    if (data) {
-      setHasNextPage(data.page < data.totalPages);
+    if (restaurantData) {
+      setHasNextPage(page < Math.ceil(restaurantData.data.length / 10));
     }
-  }, [data]);
+  }, [restaurantData, page]);
 
   // 검색 처리
   const handleSearch = (keyword: string) => {
@@ -99,7 +99,7 @@ const FeedPage = () => {
 
   // 레스토랑 카드 렌더링
   const renderRestaurantCards = () => {
-    if (!data || !data.data.length) {
+    if (!restaurantData || !restaurantData.data.length) {
       return (
         <Box sx={{ py: 8, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
@@ -111,11 +111,45 @@ const FeedPage = () => {
       );
     }
 
+    // 검색어와 필터 적용
+    let filteredRestaurants = restaurantData.data;
+    if (searchKeyword) {
+      filteredRestaurants = filteredRestaurants.filter(restaurant => 
+        restaurant.restaurant.toLowerCase().includes(searchKeyword.toLowerCase())
+      );
+    }
+    if (filters.length > 0) {
+      filteredRestaurants = filteredRestaurants.filter(restaurant => 
+        filters.includes(restaurant.category)
+      );
+    }
+
+    // 정렬 적용
+    filteredRestaurants = [...filteredRestaurants].sort((a, b) => {
+      switch (sortBy) {
+        case 'latest':
+          // TODO: 정렬 기준이 없으므로 임시로 id 기준으로 정렬
+          return b.id - a.id;
+        case 'rating':
+          return b.rate - a.rate;
+        case 'distance':
+          // TODO: 현재 위치 기준 거리 계산
+          return 0;
+        default:
+          return 0;
+      }
+    });
+
+    // 페이지네이션 적용
+    const startIndex = (page - 1) * 10;
+    const endIndex = startIndex + 10;
+    const paginatedRestaurants = filteredRestaurants.slice(startIndex, endIndex);
+
     return (
       <Grid container spacing={3}>
-        {data.data.map((restaurant, index) => (
+        {paginatedRestaurants.map((restaurant, index) => (
           <Grid item xs={12} sm={6} md={4} key={restaurant.id}>
-            <div ref={index === data.data.length - 1 ? lastRestaurantCallback : null}>
+            <div ref={index === paginatedRestaurants.length - 1 ? lastRestaurantCallback : null}>
               <RestaurantCard
                 restaurant={restaurant}
                 onClick={() => handleRestaurantClick(restaurant)}
@@ -178,7 +212,7 @@ const FeedPage = () => {
       </div>
       
       {/* 에러 메시지 */}
-      {error && (
+      {(restaurantError || postError) && (
         <Alert severity="error" className="mb-4">
           데이터를 불러오는데 실패했습니다.
         </Alert>
@@ -188,7 +222,7 @@ const FeedPage = () => {
       {renderRestaurantCards()}
       
       {/* 로딩 인디케이터 */}
-      {(isLoading || isFetching) && (
+      {(isRestaurantLoading || isPostLoading) && (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>

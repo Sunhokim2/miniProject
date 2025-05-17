@@ -12,8 +12,10 @@ COPY . .
 
 # 환경 변수 설정
 ENV NODE_ENV=production
+ARG VITE_NAVER_CLIENT_ID
+ENV VITE_NAVER_CLIENT_ID=$VITE_NAVER_CLIENT_ID
 
-# 빌드
+# 빌드 및 환경 변수 주입
 RUN npm run build
 
 # 실행 스테이지

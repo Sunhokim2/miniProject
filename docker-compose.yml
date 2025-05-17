@@ -1,19 +1,23 @@
-version: '3.8'
 
 services:
   frontend:
     build:
       context: ./frontProject
       dockerfile: Dockerfile.dev
+      args:
+        - VITE_NAVER_CLIENT_ID=${VITE_NAVER_CLIENT_ID}
     ports:
       - "5173:5173"
     volumes:
       - ./frontProject:/app
       - /app/node_modules
+    env_file:
+      - ./.env
     environment:
       - NODE_ENV=development
       - VITE_HOST=0.0.0.0
       - VITE_PORT=5173
+      - VITE_NAVER_CLIENT_ID=${VITE_NAVER_CLIENT_ID}
     command: npm run dev -- --host 0.0.0.0
     networks:
       - app-network
