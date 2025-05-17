@@ -46,3 +46,42 @@
     @apply p-4 bg-white rounded-lg shadow-md dark:bg-gray-800;
   }
 }
+
+/* 현재 위치 마커 스타일 */
+.current-location-marker {
+  position: relative;
+  width: 38px;
+  height: 58px;
+}
+
+.current-location-marker .marker-icon {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.current-location-marker::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 20px solid #4f46e5;
+}
+
+/* 네이버 지도 줌 컨트롤 위치 조정 */
+/* 네이버 지도 API에서 직접 zoomControlOptions로 위치를 조정해야 합니다.
+   CSS로는 위치 조정이 불가능합니다. MapPage.tsx의 mapOptions에서 설정하세요. */

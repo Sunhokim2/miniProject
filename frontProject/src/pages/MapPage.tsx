@@ -30,6 +30,7 @@ const MapPage = () => {
     latitude: 37.5665, // 서울 중심 좌표
     longitude: 126.9780,
   });
+  const [currentLocationMarker, setCurrentLocationMarker] = useState<any>(null);
 
   // 더미데이터 사용
   const { data: restaurantData, isLoading, error } = useQuery({
@@ -49,10 +50,7 @@ const MapPage = () => {
     const mapOptions = {
       center: new window.naver.maps.LatLng(mapCenter.latitude, mapCenter.longitude),
       zoom: 14,
-      zoomControl: true,
-      zoomControlOptions: {
-        position: window.naver.maps.Position.TOP_RIGHT,
-      },
+      zoomControl: false,
     };
 
     const map = new window.naver.maps.Map(mapRef.current, mapOptions);
@@ -60,6 +58,12 @@ const MapPage = () => {
 
     // 현재 위치 가져오기
     if (navigator.geolocation) {
+      const options = {
+        enableHighAccuracy: true, // 높은 정확도
+        timeout: 5000, // 5초 타임아웃
+        maximumAge: 0 // 캐시된 위치 정보 사용하지 않음
+      };
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -69,7 +73,23 @@ const MapPage = () => {
         },
         (error) => {
           console.error('Error getting current position:', error);
-        }
+          let errorMessage = '위치 정보를 가져오는데 실패했습니다.';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = '위치 정보 접근 권한이 거부되었습니다.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = '위치 정보를 사용할 수 없습니다.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = '위치 정보 요청 시간이 초과되었습니다.';
+              break;
+          }
+          
+          alert(errorMessage);
+        },
+        options
       );
     }
 
@@ -116,16 +136,64 @@ const MapPage = () => {
   const handleMoveToMyLocation = () => {
     if (!naverMapRef.current || !navigator.geolocation) return;
 
+    const options = {
+      enableHighAccuracy: true, // 높은 정확도
+      timeout: 5000, // 5초 타임아웃
+      maximumAge: 0 // 캐시된 위치 정보 사용하지 않음
+    };
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         const newCenter = new window.naver.maps.LatLng(latitude, longitude);
         naverMapRef.current.setCenter(newCenter);
         setMapCenter({ latitude, longitude });
+
+        // 기존 마커 제거
+        if (currentLocationMarker) {
+          currentLocationMarker.setMap(null);
+        }
+
+        // 새로운 마커 생성
+        const markerOptions = {
+          position: newCenter,
+          map: naverMapRef.current,
+          icon: {
+            content: `
+              <div class="current-location-marker">
+                <div class="marker-icon" style="background-color: #4f46e5">
+                  <span>현재</span>
+                </div>
+              </div>
+            `,
+            size: new window.naver.maps.Size(38, 58),
+            anchor: new window.naver.maps.Point(19, 58),
+          },
+          zIndex: 1000,
+        };
+
+        const newMarker = new window.naver.maps.Marker(markerOptions);
+        setCurrentLocationMarker(newMarker);
       },
       (error) => {
         console.error('Error getting current position:', error);
-      }
+        let errorMessage = '위치 정보를 가져오는데 실패했습니다.';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = '위치 정보 접근 권한이 거부되었습니다.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = '위치 정보를 사용할 수 없습니다.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = '위치 정보 요청 시간이 초과되었습니다.';
+            break;
+        }
+        
+        alert(errorMessage);
+      },
+      options
     );
   };
 
@@ -141,7 +209,7 @@ const MapPage = () => {
   };
 
   return (
-    <div className="relative h-screen w-full">
+    <div className="relative h-[calc(100vh-128px)] md:h-[calc(100vh-64px)] w-full">
       {/* 지도 */}
       <div ref={mapRef} className="w-full h-full" />
 
@@ -170,12 +238,12 @@ const MapPage = () => {
       </div>
 
       {/* 지도 컨트롤 */}
-      <div className="absolute top-20 right-4">
+      <div className="absolute bottom-32 right-4 md:bottom-24 md:right-8">
         <MapControls onMyLocation={handleMoveToMyLocation} />
       </div>
 
       {/* 맛집 추가 버튼 */}
-      <div className="absolute bottom-8 right-8">
+      <div className="absolute bottom-16 right-4 md:bottom-8 md:right-8">
         <Fab
           color="primary"
           aria-label="add"
