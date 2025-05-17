@@ -47,35 +47,35 @@ const SettingsPage = () => {
   if (!currentUser) return <Box className="p-4">사용자 정보를 찾을 수 없습니다.</Box>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Typography variant="h4" component="h1" className="mb-8">
+        <Typography variant="h4" component="h1" className="mb-8 text-gray-900 dark:text-white">
           설정
         </Typography>
 
         {/* 계정 정보 */}
-        <Paper className="p-6">
-          <Typography variant="h6" className="mb-4">
+        <Paper className="p-6 bg-white dark:bg-gray-800">
+          <Typography variant="h6" className="mb-4 text-gray-900 dark:text-white">
             계정 정보
           </Typography>
           <Box className="space-y-4">
             <div>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography variant="subtitle2" color="text.secondary" className="dark:text-gray-400">
                 사용자 이름
               </Typography>
-              <Typography>{currentUser.user_name}</Typography>
+              <Typography className="text-gray-900 dark:text-white">{currentUser.user_name}</Typography>
             </div>
             <div>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography variant="subtitle2" color="text.secondary" className="dark:text-gray-400">
                 이메일
               </Typography>
-              <Typography>{currentUser.email}</Typography>
+              <Typography className="text-gray-900 dark:text-white">{currentUser.email}</Typography>
             </div>
             <div>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography variant="subtitle2" color="text.secondary" className="dark:text-gray-400">
                 가입일
               </Typography>
-              <Typography>
+              <Typography className="text-gray-900 dark:text-white">
                 {new Date(currentUser.created_at).toLocaleDateString()}
               </Typography>
             </div>

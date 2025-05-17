@@ -187,31 +187,31 @@ const MyPage = () => {
   if (!user) return <Box className="p-4">사용자 정보를 찾을 수 없습니다.</Box>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 프로필 섹션 */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
           <div className="flex items-center space-x-4">
-            <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-2xl text-gray-500">
+            <div className="h-20 w-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <span className="text-2xl text-gray-500 dark:text-gray-300">
                 {user.user_name.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <h2 className="text-2xl font-bold">{user.user_name}</h2>
-              <p className="text-gray-500">{user.email}</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user.user_name}</h2>
+              <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
             </div>
           </div>
         </div>
 
         {/* 탭 네비게이션 */}
-        <div className="bg-white shadow rounded-lg mb-6">
-          <nav className="flex border-b">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+          <nav className="flex border-b border-gray-200 dark:border-gray-700">
             <button
               className={`px-6 py-3 text-sm font-medium ${
                 activeTab === 'profile'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
               onClick={() => setActiveTab('profile')}
             >
@@ -220,8 +220,8 @@ const MyPage = () => {
             <button
               className={`px-6 py-3 text-sm font-medium ${
                 activeTab === 'bookmarks'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
               onClick={() => setActiveTab('bookmarks')}
             >
@@ -231,22 +231,22 @@ const MyPage = () => {
         </div>
 
         {/* 탭 컨텐츠 */}
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
           {activeTab === 'profile' && (
             <div>
-              <h3 className="text-lg font-medium mb-4">프로필 정보</h3>
+              <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">프로필 정보</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">이름</label>
-                  <p className="mt-1">{user.user_name}</p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">이름</label>
+                  <p className="mt-1 text-gray-900 dark:text-white">{user.user_name}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">이메일</label>
-                  <p className="mt-1">{user.email}</p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">이메일</label>
+                  <p className="mt-1 text-gray-900 dark:text-white">{user.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">가입일</label>
-                  <p className="mt-1">{new Date(user.created_at).toLocaleDateString()}</p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">가입일</label>
+                  <p className="mt-1 text-gray-900 dark:text-white">{new Date(user.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
             </div>
