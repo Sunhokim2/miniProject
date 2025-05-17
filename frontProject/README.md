@@ -15,7 +15,134 @@ If you are developing a production application, we recommend using TypeScript wi
 
 ## 프로젝트 개요
 
-React(Vite) 기반의 소셜 로그인 및 맛집 리뷰/예약 플랫폼 프론트엔드입니다.
+React(Vite) 기반의 소셜 로그인 및 맛집 리뷰/예약 플랫폼 프론트엔드입니다. 현존하는 레퍼런스페이지를 참고하여 제작하였습니다. 참고 레퍼런스 프로젝트:https://www.inflearn.com/course/%EB%A7%9B%EC%A7%91-%EC%A7%80%EB%8F%84%EC%95%B1-%EB%A7%8C%EB%93%A4%EA%B8%B0-reactnative-nestjs
+(맛집 지도앱 만들기 (React Native + NestJS))
+
+## 기술 스택
+- Frontend: React, TypeScript, Material-UI
+- Backend: SpringBoot
+- Database: PostgreSQL
+
+## 개발 환경 설정
+
+### 프론트엔드 설정
+```bash
+cd frontProject
+npm install
+npm run dev
+```
+
+### 백엔드 설정
+```bash
+cd backProject
+npm install
+npm run dev
+```
+
+## 더미데이터 구조
+
+### 사용자 데이터 (users.ts)
+```typescript
+interface User {
+  id: number;
+  user_name: string;
+  email: string;
+  password: string;
+  email_verified: boolean;
+  role: 'user' | 'admin';
+  created_at: string;
+}
+```
+
+### 레스토랑 데이터 (restaurants.ts)
+```typescript
+interface Restaurant {
+  id: number;
+  restaurant: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  rate: number;
+  created_at: string;
+}
+```
+
+### 북마크 데이터 (bookmarks.ts)
+```typescript
+interface Bookmark {
+  id: number;
+  user_id: number;
+  restaurant_id: number;
+  created_at: string;
+}
+```
+
+### 게시물 데이터 (posts.ts)
+```typescript
+interface Post {
+  id: number;
+  restaurant_id: number;
+  user_id: number;
+  restaurant_name: string;
+  latitude: number;
+  longitude: number;
+  created_at: string;
+}
+```
+
+## 더미데이터 사용 방법
+개발 환경에서는 `src/mocks` 디렉토리에 있는 더미데이터를 사용합니다. 각 데이터는 React Query를 통해 다음과 같이 사용됩니다:
+
+```typescript
+// 사용자 데이터 조회
+const { data: userData } = useQuery({
+  queryKey: ['users'],
+  queryFn: () => Promise.resolve({ data: users }),
+});
+
+// 레스토랑 데이터 조회
+const { data: restaurantData } = useQuery({
+  queryKey: ['restaurants'],
+  queryFn: () => Promise.resolve({ data: restaurants }),
+});
+
+// 북마크 데이터 조회
+const { data: bookmarkData } = useQuery({
+  queryKey: ['bookmarks'],
+  queryFn: () => Promise.resolve({ data: bookmarks }),
+});
+
+// 게시물 데이터 조회
+const { data: postData } = useQuery({
+  queryKey: ['posts'],
+  queryFn: () => Promise.resolve({ data: posts }),
+});
+```
+
+## 페이지별 더미데이터 사용
+
+### MapPage
+- `restaurants.ts`: 기본 맛집 정보 표시
+- `posts.ts`: 사용자 게시물 표시
+
+### FeedPage
+- `posts.ts`: 게시물 목록
+- `restaurants.ts`: 연관된 맛집 정보
+- `users.ts`: 게시물 작성자 정보
+
+### MyPage
+- `users.ts`: 사용자 정보
+- `posts.ts`: 사용자의 게시물
+- `bookmarks.ts`: 북마크한 맛집
+
+### SettingsPage
+- `users.ts`: 사용자 계정 정보
+
+## API 연동
+실제 서비스에서는 더미데이터 대신 백엔드 API를 사용합니다. API 연동 시에는 `src/services` 디렉토리의 API 클라이언트를 사용합니다.
+
+## 라이선스
+MIT
 
 ---
 
@@ -107,3 +234,21 @@ docker run -d -p 80:80 front-nginx
 - 환경변수는 `.env` 파일에서 관리
 - 소셜 로그인 연동을 위해 각 서비스의 client id/secret 필요
 - 개발 중 문의사항은 팀 슬랙 또는 이슈 트래커 활용
+
+# .env 환경변수 파일은 깃에 연동되지 않으므로 프로젝트 루트 위치에 .env파일을 생성하고 아래 내용을 복사 붙여넣기 하세요.
+
+# Kakao OAuth
+VITE_KAKAO_CLIENT_ID=your_kakao_client_id
+VITE_KAKAO_REDIRECT_URI=http://localhost:5173/oauth/callback/kakao
+
+# Google OAuth
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+VITE_GOOGLE_REDIRECT_URI=http://localhost:5173/oauth/callback/google
+
+# Apple OAuth
+VITE_APPLE_CLIENT_ID=your_apple_client_id
+VITE_APPLE_REDIRECT_URI=http://localhost:5173/oauth/callback/apple 
+
+# Naver OPEN API
+VITE_NAVER_CLIENT_ID= =your_naver_client_id
+
