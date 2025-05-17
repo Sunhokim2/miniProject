@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import logo from '@/assets/logo.svg';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -8,8 +9,8 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
-            <Link to="/" className="text-xl font-bold text-primary">
-              MATZIP
+            <Link to="/" className="flex items-center">
+              <img src={logo} alt="MATZIP" className="h-8 w-auto" />
             </Link>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               당신만의 맛집 지도를 만들어보세요.

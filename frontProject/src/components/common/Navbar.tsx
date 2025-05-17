@@ -10,6 +10,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
+import logo from '@/assets/logo.svg';
 
 const Navbar = () => {
   const { pathname } = useLocation();
@@ -29,8 +30,8 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
           {/* 로고 */}
-          <Link to="/" className="text-xl font-bold text-primary">
-            MATZIP
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="MATZIP" className="h-8 w-auto" />
           </Link>
 
           {/* 모바일 메뉴 버튼 */}

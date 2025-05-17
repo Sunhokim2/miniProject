@@ -195,7 +195,7 @@ const SignupPage = () => {
       </div>
       
       <div className="mt-6 text-center">
-        <Link to="/login" className="text-primary hover:text-primary-dark">
+        <Link to="/login" className="text-primary hover:text-primary-dark text-large">
           이미 계정이 있으신가요? 로그인
         </Link>
       </div>
