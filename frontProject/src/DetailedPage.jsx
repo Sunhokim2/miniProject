@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./Pages.css";
 import regionColors from './korea_regions_colors.json';
 import categoryColors from './category_colors.json'
 
