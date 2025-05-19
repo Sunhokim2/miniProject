@@ -19,14 +19,14 @@ const queryClient = new QueryClient({
 });
 
 // Theme Provider Wrapper
-const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
+const ThemeWrapper = (props) => {
   const { theme } = useTheme();
   const muiTheme = getTheme(theme);
 
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
-      {children}
+      {props.children}
     </ThemeProvider>
   );
 };
