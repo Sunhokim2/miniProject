@@ -1,10 +1,21 @@
 import React from 'react';
 import '../css/Login.css'; // Adjust the path as necessary
 import { Link } from 'react-router-dom';
+import GoogleLoginButton from '../components/GoogleLogin';
 
 
 
 const Login = () => {
+    // const url_google_login = `https://accounts.google.com/o/oauth2/v2/auth?
+    // client_id=${process.env.REACT_APP_GOOGLE_AUTH_CLIENT_ID}&
+    // redirect_uri=http://localhost:5173/LogInLanding&
+    // response_type=code&
+    // scope=email+profile`;
+    
+    // const handleGoogleLogin= ()=>{
+    //     window.location.href = url_google_login;
+    // };
+
     return (
         <div className="login-container">
             <div className="login-box">
@@ -23,6 +34,8 @@ const Login = () => {
                     회원가입
                         {/* <Button>회원가입</Button> */}
                     </Link>
+                    <GoogleLoginButton></GoogleLoginButton>
+
                 </form>
             </div>
         </div>
