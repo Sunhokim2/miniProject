@@ -43,8 +43,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 개발 환경에서만 Mock 데이터 사용
-    if (import.meta.env.DEV) {
+    // Mock 데이터 사용 여부를 환경 변수로 제어
+    if (import.meta.env.VITE_USE_MOCK_DATA) {
       setUser(mockUser);
     }
     setIsLoading(false);
@@ -55,9 +55,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
       
-      // 개발 환경에서는 mockup 사용자로 로그인
-      if (import.meta.env.DEV) {
-        console.log('개발 환경: Mockup 사용자로 로그인');
+      // Mock 데이터 사용 여부를 환경 변수로 제어
+      if (import.meta.env.VITE_USE_MOCK_DATA) {
+        console.log('Mock 데이터 사용: Mockup 사용자로 로그인');
         setUser(mockUser);
         return;
       }
@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
       // TODO: 실제 API 호출로 대체
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCK_DATA) {
         setUser(mockUser);
       }
     } catch (err) {

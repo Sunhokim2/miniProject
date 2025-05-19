@@ -45,6 +45,7 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       'import.meta.env.VITE_NAVER_CLIENT_ID': JSON.stringify(env.VITE_NAVER_CLIENT_ID),
+      'import.meta.env.VITE_USE_MOCK_DATA': JSON.stringify(true)
     },
   };
 });

@@ -32,15 +32,27 @@ const MapPage = () => {
   });
   const [currentLocationMarker, setCurrentLocationMarker] = useState<any>(null);
 
-  // 더미데이터 사용
+  // 더미데이터 사용 (환경 변수로 제어)
   const { data: restaurantData, isLoading, error } = useQuery({
     queryKey: ['restaurants'],
-    queryFn: () => Promise.resolve({ data: restaurants }),
+    queryFn: () => {
+      if (import.meta.env.VITE_USE_MOCK_DATA) {
+        return Promise.resolve({ data: restaurants });
+      }
+      // TODO: 실제 API 호출
+      return Promise.resolve({ data: [] });
+    },
   });
 
   const { data: postData } = useQuery({
     queryKey: ['posts'],
-    queryFn: () => Promise.resolve({ data: posts }),
+    queryFn: () => {
+      if (import.meta.env.VITE_USE_MOCK_DATA) {
+        return Promise.resolve({ data: posts });
+      }
+      // TODO: 실제 API 호출
+      return Promise.resolve({ data: [] });
+    },
   });
 
   // 네이버 지도 초기화
