@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import regionColors from './korea_regions_colors.json';
+import categoryColors from './category_colors.json'
 
 const DetailedPage = () => {
   //   const placeData = {
@@ -29,7 +30,7 @@ const DetailedPage = () => {
   //       },
   //     ],
   //   };
-  const placeData1 = {
+  const placeData = {
     id: 3,
     imageUrl:
       "https://cdn.imweb.me/upload/S2024013025a8a2a1c6644/13570ac6b056e.png",
@@ -58,10 +59,11 @@ const DetailedPage = () => {
     ],
   };
   //placeData 데이터 BE 에서 JSON으로 받아오기
-  const [placeData, setPlaceData] = useState(null);
+  const [placeData1, setPlaceData] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/place/3")
+    const url = "http://localhost:8080/api/place/3";
+    fetch(url)
       .then((res) => res.json())
       .then((data) => setPlaceData(data))
       .catch((error) => {
@@ -118,13 +120,21 @@ const DetailedPage = () => {
         <div className="d-flex mb-2">
           <div className="detail-label">카테고리: </div>
           <div className="d-flex justify-content-between">
-            <span
+            {/* <span
               className={`badge ${
                 placeData.category.trim() === "음식점"
                   ? "badge-category-restaurant"
                   : "badge-category-cafe"
               } me-2`}
-            >
+            > */}
+            <span
+                className="badge"
+                style={{
+                  backgroundColor: categoryColors[placeData.category] || "#ccc",
+                  color: "#fff",
+                  border: `1px solid ${categoryColors[placeData.category] || "#ccc"}`,
+                }}
+              >
               {placeData.category}
             </span>
           </div>

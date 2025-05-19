@@ -37,16 +37,6 @@
 .bookmark-button.gray {
   color: lightgray;
 }
-.badge-category-restaurant {
-  color: #dc3545;
-  border: 1px solid #dc3545;
-  background-color: #dc3545;
-}
-.badge-category-cafe {
-  color: #0d6efd;
-  border: 1px solid #0d6efd;
-  background-color: #0d6efd;
-}
 
 .card-img-top {
   width: 100%;
@@ -55,28 +45,24 @@
   border-radius: 0.5rem;
 }
 
-/* 카테고리 배지 - 음식점 */
-.badge-category-restaurant {
+.badge-category {
   display: inline-block;
   padding: 0.4em 0.8em;
   font-size: 0.8rem;
-  color: #fff;
-  background-color: #e74c3c;
   border-radius: 0.5rem;
   width: auto;
   max-width: max-content;
   text-align: center;
 }
 
-/* 카테고리 배지 - 카페 */
-.badge-category-cafe {
+
+.badge-region {
   display: inline-block;
-  padding: 0.4em 0.8em;
-  font-size: 0.8rem;
-  color: #fff;
-  background-color: #3498db;
-  border-radius: 0.5rem;
+  padding: 0.2em 0.4em;
+  font-size: 0.7rem;
+  border-radius: 0.4rem;
   width: auto;
   max-width: max-content;
   text-align: center;
+  font-weight: bold;
 }
