@@ -37,6 +37,10 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash].[ext]'
         }
+      },
+      target: 'esnext',
+      modulePreload: {
+        polyfill: true
       }
     },
     define: {
