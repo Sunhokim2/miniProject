@@ -24,7 +24,7 @@ public class NaverSearchService {
     private String naverClientSecret;
 
     // 기본 검색 파라미터 (필요에 따라 외부 설정 또는 메소드 파라미터로 변경 가능)
-    private static final String DEFAULT_DISPLAY = "10"; // 한 번에 표시할 검색 결과 개수
+    private static final String DEFAULT_DISPLAY = "3"; // 한 번에 표시할 검색 결과 개수
     private static final String DEFAULT_START = "1";    // 검색 시작 위치
     private static final String DEFAULT_SORT = "sim";   // 정렬 옵션: sim (유사도순), date (날짜순)
     private static final String BLOG_SEARCH_API_URL = "https://openapi.naver.com/v1/search/blog.json";
