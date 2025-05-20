@@ -2,6 +2,7 @@ import React from 'react';
 import '../css/Signup.css'; // Adjust the path as necessary
 import EmailVerification from '../components/EmailVerification';
 import {useState,useEffect,useRef} from 'react'
+import { useNavigate } from 'react-router-dom';
 const Signup = () => {
     const match = useRef(0);    
     const [email, setEmail] = React.useState('');
@@ -13,6 +14,8 @@ const Signup = () => {
         password: '',
         confirmPassword: '',
     });
+    const navigate = useNavigate();
+
     // match.current.classList.remove('pw-match');
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -60,8 +63,9 @@ const Signup = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                alert('Signup successful!' +JSON.stringify(payload));
+                alert('Signup successful!');
                 console.log('Response from server:', data);
+                navigate('/login'); // Signup 성공 후 로그인 페이지로 이동
             } else {
                 alert('Signup failed. Please try again.');
                 const data = await response.json();

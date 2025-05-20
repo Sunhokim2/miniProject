@@ -1,45 +1,84 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../css/Login.css'; // Adjust the path as necessary
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import GoogleLoginButton from '../components/GoogleLogin';
 
-
-
 const Login = () => {
-    // const url_google_login = `https://accounts.google.com/o/oauth2/v2/auth?
-    // client_id=${process.env.REACT_APP_GOOGLE_AUTH_CLIENT_ID}&
-    // redirect_uri=http://localhost:5173/LogInLanding&
-    // response_type=code&
-    // scope=email+profile`;
-    
-    // const handleGoogleLogin= ()=>{
-    //     window.location.href = url_google_login;
-    // };
+    const [formData, setFormData] = useState({
+        username: '',
+        password: '',
+    });
+    const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert('Login successful!');
+                // 로그인 성공 후 원하는 페이지로 이동
+                navigate('/loginlanding');
+            } else {
+                alert('Login failed. Please check your credentials.');
+                console.log('Login failed:'+ JSON.stringify(response));
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+            alert('An error occurred while logging in.');
+        }
+    };
 
     return (
         <div className="login-container">
             <div className="login-box">
                 <h2>이집맛집 Login</h2>
-                <form>
+                <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label htmlFor="E-Mail">E-Mail</label>
-                        <input type="text" id="E-Mail" name="E-Mail" placeholder="Enter your E-Mail" required />
+                        <label htmlFor="email">E-mail</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Enter your username"
+                            required
+                            value={formData.email}
+                            onChange={handleChange}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required />
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            required
+                            value={formData.password}
+                            onChange={handleChange}
+                        />
                     </div>
                     <button type="submit" className="login-button">Login</button>
                     <Link to="/signup">
-                    회원가입
-                        {/* <Button>회원가입</Button> */}
+                        회원가입
                     </Link>
-                    <br></br>
+                    <br />
                     {/* <GoogleLoginButton></GoogleLoginButton> */}
-                    <Link to = "http://localhost:8080/oauth2/authorization/google">
-                    구글로그인
+                    <Link to="http://localhost:8080/oauth2/authorization/google">
+                        구글로그인
                     </Link>
-
                 </form>
             </div>
         </div>
