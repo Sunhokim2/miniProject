@@ -8,7 +8,7 @@ const Signup = () => {
     const [verificationCode, setVerificationCode] = React.useState('');
     const [passwordError, setPasswordError] = React.useState(''); // 비밀번호 불일치 메시지 상태
     const [formData, setFormData] = React.useState({
-        username: '',
+        userName: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -23,8 +23,8 @@ const Signup = () => {
 
         const pw = newStruct.password;
         const cpw = newStruct.confirmPassword;
-        console.log ('비밀번호:', pw);
-        console.log ('비밀번호 확인:', cpw);
+        // console.log ('비밀번호:', pw);
+        // console.log ('비밀번호 확인:', cpw);
 
         if(pw === cpw){
             setPasswordError('');
@@ -39,7 +39,8 @@ const Signup = () => {
     };
     
     const handleSubmit = async (e) => {
-        const payload = {...formData, verificationCode}; // formData와 verificationCode를 포함한 payload 생성
+        const code = verificationCode;
+        const payload = {...formData, code}; // formData와 verificationCode를 포함한 payload 생성
         e.preventDefault();
         // console.log('Form Data:', formData);
         // 추가 처리 로직 (예: 서버로 데이터 전송)
@@ -49,7 +50,7 @@ const Signup = () => {
         }
         try {
             
-            const response = await fetch('http://localhost:8080/*********', { // Spring API 엔드포인트
+            const response = await fetch('http://localhost:8080/api/auth/signup', { // Spring API 엔드포인트
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -59,10 +60,12 @@ const Signup = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                alert('Signup successful!');
+                alert('Signup successful!' +JSON.stringify(payload));
                 console.log('Response from server:', data);
             } else {
                 alert('Signup failed. Please try again.');
+                const data = await response.json();
+                console.error('Error response from server:', data);
             }
         } catch (error) {
             console.error('Error during signup:', error);
@@ -78,8 +81,8 @@ const Signup = () => {
                         <label htmlFor="username">Username</label>
                         <input 
                             type="text" 
-                            id="username" 
-                            name="username" 
+                            id="userName" 
+                            name="userName" 
                             placeholder="Enter your username" required 
                             // value={formData.username}
                             onChange={handleChange}

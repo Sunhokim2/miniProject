@@ -2,8 +2,9 @@ import React from 'react';
 
 const EmailVerification = ({email}) => {
      const sendEmailAddress = async () => {
+        //console.log('email:', email);
         try {
-            const response = await fetch('http://localhost:8080/*********', { // Spring API 엔드포인트
+            const response = await fetch('http://localhost:8080/api/auth/email', { // Spring API 엔드포인트
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
