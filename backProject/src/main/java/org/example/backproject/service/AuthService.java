@@ -29,11 +29,11 @@ public class AuthService {
     public void signup(SignupDto dto) {
         String code = emailCodeMap.get(dto.getEmail());
         if (code == null || !code.equals(dto.getCode())) {
-            throw new RuntimeException("이메일 인증 코드가 일치하지 않습니다.");
+            throw new RuntimeException("{\"message\": \"이메일 인증 코드가 일치하지 않습니다.\"}");
         }
 
         if (usersRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("이미 등록된 이메일입니다.");
+            throw new RuntimeException("{\"message\": \"이미 등록된 이메일입니다.\"}");
         }
 
         Users user = new Users();

@@ -34,7 +34,11 @@ const Login = () => {
                     회원가입
                         {/* <Button>회원가입</Button> */}
                     </Link>
-                    <GoogleLoginButton></GoogleLoginButton>
+                    <br></br>
+                    {/* <GoogleLoginButton></GoogleLoginButton> */}
+                    <Link to = "http://localhost:8080/oauth2/authorization/google">
+                    구글로그인
+                    </Link>
 
                 </form>
             </div>

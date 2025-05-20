@@ -21,17 +21,19 @@ public class AuthController {
     public ResponseEntity<?> sendEmail(@RequestBody EmailDto dto) {
         try {
             authService.sendCode(dto.getEmail());
-            return ResponseEntity.ok("인증 코드 발송됨");
+            return ResponseEntity.ok("{\"message\": \"인증 코드 발송됨\"}");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("메일 전송 실패: " + e.getMessage());
+            return ResponseEntity.status(500).body("{\"error\": \"메일 전송 실패: " + e.getMessage() + "\"}");
         }
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupDto dto) {
+    public ResponseEntity<?> signup(
+        @RequestBody SignupDto dto) {
+       System.out.println(dto);
         try {
-            authService.signup(dto);
-            return ResponseEntity.ok("회원가입 완료");
+             authService.signup(dto);
+            return ResponseEntity.ok("{\"message\": \"회원가입 완료\"}");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
