@@ -27,14 +27,14 @@ public class JwtLoginController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+        System.out.println(body);
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(body.get("username"), body.get("password")));
             String token = jwtUtil.createToken(authentication.getName());
             return ResponseEntity.ok(Map.of("token", token));
         }
         catch (AuthenticationException e){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"error\": \"로그인 실패\"}"); 
         }
     }
-    
 }
