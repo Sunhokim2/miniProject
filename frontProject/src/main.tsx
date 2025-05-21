@@ -6,7 +6,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import { useTheme } from '@/hooks/useTheme';
 import { getTheme } from '@/theme';
 import App from './App';
-import './index.css';
+import './css/index.css';
 
 // Create a client
 const queryClient = new QueryClient({

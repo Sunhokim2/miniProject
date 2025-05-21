@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./Pages.css";
-import regionColors from "./korea_regions_colors.json";
-import categoryColors from "./category_colors.json";
+import regionColors from "../korea_regions_colors.json";
+import categoryColors from "../category_colors.json";
 
 const MyPage = () => {
   //dummy data
@@ -286,4 +286,4 @@ const MyPage = () => {
     </div>
   );
 };
-export default MyPage;
+export default MyPage_SM;

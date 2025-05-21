@@ -1,5 +1,5 @@
 .detail-label {
-    width: 65px;
+    width: 70px;
     text-align: right;
     color: #6c757d;
     font-weight: 600;
@@ -8,11 +8,11 @@
 }
 
 .detailed-page-image {
-    width: 100%;
+    width: 80%;
     max-height: 300px;
     object-fit: cover;
     border-radius: 8px;
-    margin-bottom: 1rem;
+    margin-bottom: 5rem;
 }
 
 .bookmark-button {
