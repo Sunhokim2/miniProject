@@ -19,8 +19,11 @@ public class Restaurants {
 
     // 음식점명
     private String restaurant_name;
-    // 주소
+
+    // 주소 <<- 이걸로 판단해서 중복방지
+    @Column(unique = true, nullable = false)
     private String address;
+
     // 종류(빵집, 카페, 식당 등)
     private String category;
     // 지역명

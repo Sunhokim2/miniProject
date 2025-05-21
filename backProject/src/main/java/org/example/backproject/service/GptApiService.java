@@ -23,11 +23,25 @@ public class GptApiService {
     // 레스트 템플릿은 동기식으로 작동하고 webclient는 비동기식으로 작동함
     public String summarizeBlog(String content) {
         String contents = """
-            응답은 placeData형식으로 요약합니다.
+            다음은 블로그 전문입니다.
+        """ + content;
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        OpenAiRequest request = new OpenAiRequest();
+        request.setModel("gpt-4o-mini");
+        request.setTemperature(0.6);
+        request.setMax_tokens(300);
+        request.setMessages(List.of(
+                Map.of("role", "system", "content",
+                        """
+                당신은 블로그 요약전문가입니다. 블로그 내용 전문을 보고 핵심을 정리해서 이모티콘과함께 사용자한테 요약합니다. 이벤트의 내용은 다루지 마시고, 음식의 대한 설명과 매장의 상태, 친절도 위주로 요약하세요. 대답은 항상 json형태의 String으로만 대답합니다.
+                
+                응답은 아래 형식으로만 대답합니다.
             {
                 "restaurant_name": "[음식점 이름]",
                 "category" : "[음식점 종류]",
-                "region": "[지역명]",
+                "region": "",
                 "main_menu": "[메인메뉴 최대3가지를 리스트로]", 
                 "address" : "[상세주소]", 
                 "body" : "[블로그에 작성된 내용을 이모티콘과함께 간략하게 요약]",
@@ -35,9 +49,9 @@ public class GptApiService {
                 "status": "[방문여부(기본은 방문함)]"
             } 
             restaurant_name에는 음식점이름만 나오고 지역점포인건 표시하지않습니다.
-            category의 음식점 종류는 [한식, 양식, 일식, 중식, 카페]
-            address는 전체주소가 나와야만 합니다.
-            region은 [
+            category의 음식점 종류는 [한식, 양식, 일식, 중식, 카페].
+            region은  반드시 아래 종류중 하나만 선택합니다. 그 외는 null입니다. 광역시가 아니라면 시 또는 군으로 표기됩니다.경기도,전라도, 강원도, 충청도, 제주특별자치도, 등에 -도 가 붙은것들은 쓰지 않습니다.
+            [
                               "서울시 강남구", "서울시 강동구", "서울시 강북구", "서울시 강서구", "서울시 관악구",
                               "서울시 광진구", "서울시 구로구", "서울시 금천구", "서울시 노원구", "서울시 도봉구",
                               "서울시 동대문구", "서울시 동작구", "서울시 마포구", "서울시 서대문구", "서울시 서초구",
@@ -91,26 +105,14 @@ public class GptApiService {
                               "구례군", "고흥군", "보성군", "화순군", "장흥군",
                               "강진군", "해남군", "영암군", "무안군", "함평군",
                               "영광군", "장성군", "완도군", "진도군", "신안군",
+                              
                               "제주시", "서귀포시"
-                            ] 이 중에 선택하세요.
+                            ]
+            address는 전체주소가 나와야만 합니다. 주소를 작성할 때는 반드시 '서울특별시', '경기도', '인천광역시', '제주특별자치도'와 같이 행정구역 전체 명칭을 포함해야 합니다. '서울', '경기', '인천', '제주' 등으로 축약해서는 안 됩니다. 이는 매우 중요한 규칙입니다.
             rate는 float형식입니다.
             status는 bool형식입니다.
-            
-            다음은 블로그 전문입니다.
-        """ + content;
-//        sorce는 이거 검색에 쓰인걸 그대로 넣을거임
-//        위도 경도는 address기반으로 지도api에서 검색해야할듯
-//        블로그 image도 이걸로는 못찾음
-
-        RestTemplate restTemplate = new RestTemplate();
-
-        OpenAiRequest request = new OpenAiRequest();
-        request.setModel("gpt-4o-mini");
-        request.setTemperature(0.7);
-        request.setMax_tokens(300);
-        request.setMessages(List.of(
-                Map.of("role", "system", "content",
-                        "당신은 블로그 요약전문가입니다. 블로그 내용 전문을 보고 핵심을 정리해서 이모티콘과함께 사용자한테 요약합니다. 이벤트의 내용은 다루지 마시고, 음식의 대한 설명과 매장의 상태, 친절도 위주로 요약하세요. 대답은 항상 json형태의 String으로만 대답합니다."),
+                
+                """),
                 Map.of("role", "user", "content", contents)
         ));
         HttpHeaders headers = new HttpHeaders();

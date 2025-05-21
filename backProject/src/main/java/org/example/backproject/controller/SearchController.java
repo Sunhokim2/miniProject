@@ -45,9 +45,7 @@ public class SearchController {
     @Autowired
     RestaurantsRepository restaurantRepository;
     @Autowired
-    NaverGeoCodingService geoCodingService;
-    @Autowired
-    private NaverGeoCodingService naverGeoCodingService;
+    NaverGeoCodingService naverGeoCodingService;
 
     // 루트 경로 및 검색 실행 경로 모두 이 메소드가 처리
     @GetMapping("/")
@@ -115,6 +113,7 @@ public class SearchController {
 //                    4. 링크리스트를 크롤링으로 넘기기 (크롤링 결과는 <링크 , 내용>)
                     Map<String, String> crawledData = crawlingService.getBlogContent(linkList);
 
+
 //                    5. crawledData를 gpt api를 통해 분류 및 요약
                     List<Restaurants> restaurantEntities = crawledData.entrySet().stream()
                             .map(entry -> {
@@ -142,61 +141,75 @@ public class SearchController {
                                 } catch (JsonProcessingException e) {
                                     throw new RuntimeException(e);
                                 }
-                                System.out.println("겟바디 : " + summaryDto.getBody());
+
 
                                 // 3. Restaurants로 옮기기
-                                Restaurants restaurant = new Restaurants();
-                                restaurant.setRestaurant_name(summaryDto.getRestaurant_name());
-                                restaurant.setAddress(summaryDto.getAddress());
-                                restaurant.setCategory(summaryDto.getCategory());
-                                restaurant.setRegion(summaryDto.getRegion());
-                                restaurant.setMainMenu(summaryDto.getMainMenu());
-                                restaurant.setBody(summaryDto.getBody());
-                                restaurant.setRate(summaryDto.getRate());
+//                                중복방지
+                                Optional<Restaurants> AddressOpt = restaurantRepository.findByAddress(summaryDto.getAddress());
+
+                                if (AddressOpt.isPresent()) {
+                                    System.out.println("예 존재해요.");
+                                    // 이미 존재할 경우의 로직 처리 (예: 사용자에게 알림, 기존 정보 사용 등)
+//                                    return AddressOpt.get();
+
+                                    model.addAttribute("searchResultsJson","이미 DB에 있음");
+                                    return null;
+                                } else {
+                                    System.out.println("존재안함");
+                                    // 존재하지 않을 경우의 로직 처리 (예: 새로운 Restaurants 엔티티 생성 및 저장)
+                                    Restaurants restaurant = new Restaurants();
+                                    restaurant.setRestaurant_name(summaryDto.getRestaurant_name());
+                                    restaurant.setAddress(summaryDto.getAddress());
+                                    restaurant.setCategory(summaryDto.getCategory());
+                                    restaurant.setRegion(summaryDto.getRegion());
+                                    restaurant.setMainMenu(summaryDto.getMainMenu());
+                                    restaurant.setBody(summaryDto.getBody());
+                                    restaurant.setRate(summaryDto.getRate());
 
 
-                                // Geocode the address to retrieve latitude and longitude
-                                List<String> geoList = null;
+                                    // Geocode the address to retrieve latitude and longitude
+                                    List<String> geoList = null;
 
-                                try {
-                                    geoList = naverGeoCodingService.getCoordinates(summaryDto.getAddress());
-                                } catch (UnsupportedEncodingException e) {
-                                    throw new RuntimeException(e);
-                                }
+                                    try {
+                                        geoList = naverGeoCodingService.getCoordinates(summaryDto.getAddress());
+                                    } catch (UnsupportedEncodingException e) {
+                                        throw new RuntimeException(e);
+                                    }
 
-                                if (geoList != null && geoList.size() == 2) {
-                                    restaurant.setLatitude(geoList.get(1)); // 위도
-                                    restaurant.setLongitude(geoList.get(0)); //경도
-                                    System.out.println("geoList : " + geoList);
-                                }
+                                    if (geoList != null && geoList.size() == 2) {
+                                        restaurant.setLatitude(geoList.get(1)); // 위도
+                                        restaurant.setLongitude(geoList.get(0)); //경도
+                                        System.out.println("geoList : " + geoList);
+                                    }
 
 //                                주소랑 상태넣기
-                                restaurant.setSource(blogLink);
-                                restaurant.setStatus(true);
+                                    restaurant.setSource(blogLink);
+                                    restaurant.setStatus(true);
 
-
-                                return restaurant; // 변환된 Restaurants 엔티티 반환
-
-
+                                    return restaurant; // 변환된 Restaurants 엔티티 반환
+                                }
                             }).filter(Objects::nonNull) // 이 필터를 유지하거나 추가하세요.
                             .collect(Collectors.toList());
 
 
-//                    6. DB에 넣기
-                    try {
-                        List<Restaurants> savedRestaurants = restaurantRepository.saveAll(restaurantEntities);
-                        log.info("{}개의 음식점 정보가 DB에 성공적으로 저장되었습니다.", savedRestaurants.size());
-                        // 저장된 엔티티 (ID 포함)를 모델에 추가하거나 다른 용도로 사용
-                        String finalJsonToDisplay = objectMapper
-                                .writerWithDefaultPrettyPrinter()
-                                .writeValueAsString(savedRestaurants); // 저장된 엔티티를 JSON으로 변환
+//                    6. DB에 넣기 ()
+                    if (!restaurantEntities.isEmpty()) {
+                        try {
+                            List<Restaurants> savedRestaurants = restaurantRepository.saveAll(restaurantEntities);
+                            log.info("{}개의 음식점 정보가 DB에 성공적으로 저장되었습니다.", savedRestaurants.size());
+                            // 저장된 엔티티 (ID 포함)를 모델에 추가하거나 다른 용도로 사용
+                            String finalJsonToDisplay = objectMapper
+                                    .writerWithDefaultPrettyPrinter()
+                                    .writeValueAsString(savedRestaurants); // 저장된 엔티티를 JSON으로 변환
 
-                        model.addAttribute("searchResultsJson", finalJsonToDisplay);
+                            model.addAttribute("searchResultsJson", finalJsonToDisplay);
 
-                    } catch (Exception e) { // 저장 중 발생할 수 있는 모든 예외 처리
-                        log.error("DB에 음식점 정보 저장 중 오류 발생", e);
-                        model.addAttribute("searchResultsJson", "{\"error\":\"DB 저장 중 오류가 발생했습니다.\"}");
+                        } catch (Exception e) { // 저장 중 발생할 수 있는 모든 예외 처리
+                            log.error("DB에 음식점 정보 저장 중 오류 발생", e);
+                            model.addAttribute("searchResultsJson", "{\"error\":\"DB 저장 중 오류가 발생했습니다.\"}");
+                        }
                     }
+
 
                 } else {
                     // 네이버 서비스에서 오류 JSON을 반환했거나, items가 비어있는 경우
