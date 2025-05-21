@@ -1,68 +1,87 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@layer base {
+  html {
+    font-family: 'Pretendard', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+    min-height: 100vh;
+  }
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  #root {
+    @apply flex flex-col min-h-screen;
+  }
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+@layer components {
+  .container {
+    @apply px-4 mx-auto max-w-7xl;
+  }
+  
+  .btn {
+    @apply px-4 py-2 font-medium rounded-md transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-dark;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-white hover:bg-secondary-dark;
+  }
+  
+  .btn-outline {
+    @apply border border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800;
+  }
+  
+  .input {
+    @apply px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:border-gray-700;
+  }
+  
+  .card {
+    @apply p-4 bg-white rounded-lg shadow-md dark:bg-gray-800;
+  }
 }
 
-body {
-  margin: 0;
+/* 현재 위치 마커 스타일 */
+.current-location-marker {
+  position: relative;
+  width: 38px;
+  height: 58px;
+}
+
+.current-location-marker .marker-icon {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #4f46e5;
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.current-location-marker::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 20px solid #4f46e5;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+/* 네이버 지도 줌 컨트롤 위치 조정 */
+/* 네이버 지도 API에서 직접 zoomControlOptions로 위치를 조정해야 합니다.
+   CSS로는 위치 조정이 불가능합니다. MapPage.tsx의 mapOptions에서 설정하세요. */
