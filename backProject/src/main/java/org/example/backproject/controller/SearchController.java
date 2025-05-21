@@ -152,7 +152,7 @@ public class SearchController {
                                     // 이미 존재할 경우의 로직 처리 (예: 사용자에게 알림, 기존 정보 사용 등)
 //                                    return AddressOpt.get();
 
-                                    model.addAttribute("searchResultsJson","이미 DB에 있음");
+                                    model.addAttribute("searchResultsJson","이미 DB에 있음\n"+ AddressOpt.get().getBody());
                                     return null;
                                 } else {
                                     System.out.println("존재안함");
