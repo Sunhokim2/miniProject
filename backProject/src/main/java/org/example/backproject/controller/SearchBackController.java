@@ -8,6 +8,7 @@ import org.example.backproject.dto.NaverApiResponse;
 import org.example.backproject.dto.NaverBlogItem;
 import org.example.backproject.dto.SearchRequestDto;
 import org.example.backproject.entity.Restaurants;
+import org.example.backproject.repository.PostsRepository;
 import org.example.backproject.repository.RestaurantsRepository;
 import org.example.backproject.service.*;
 import org.slf4j.Logger;
@@ -49,6 +50,8 @@ public class SearchBackController {
     NaverGeoCodingService naverGeoCodingService;
     @Autowired
     SearchAndPostService searchAndPostService;
+    @Autowired
+    private PostsRepository postsRepository;
 
     // 루트 경로 및 검색 실행 경로 모두 이 메소드가 처리
     @PostMapping("/api/search")
@@ -66,10 +69,11 @@ public class SearchBackController {
         }
 
         String rawJsonResponseFromNaver = naverSearchService.search(query);
+        List<Restaurants> restaurantEntities; // 처리된 식당 엔티티 리스트
 
         try {
             NaverApiResponse apiResponse = objectMapper.readValue(rawJsonResponseFromNaver, NaverApiResponse.class);
-            // ... (이하 생략, 이전 코드와 동일한 로직 수행)
+
             List<NaverBlogItem> items = (apiResponse != null && apiResponse.getItems() != null)
                     ? apiResponse.getItems()
                     : Collections.emptyList();
@@ -90,30 +94,11 @@ public class SearchBackController {
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
             List<NaverBlogItem> sortedItems = items.stream()
-                    .filter(item -> {
-                        if (item.getPostdate() == null || item.getPostdate().length() != 8) {
-                            log.warn("Postdate '{}' for link '{}' is invalid or null.", item.getPostdate(), item.getLink());
-                            return false;
-                        }
-                        try {
-                            LocalDate.parse(item.getPostdate(), dateFormatter);
-                            return true;
-                        } catch (DateTimeParseException e) {
-                            log.warn("Failed to parse postdate '{}' for link '{}'.", item.getPostdate(), item.getLink(), e);
-                            return false;
-                        }
-                    })
                     .sorted(Comparator.comparing((NaverBlogItem item) -> LocalDate.parse(item.getPostdate(), dateFormatter)).reversed())
-                    .collect(Collectors.toList());
+                    .toList();
+            List<NaverBlogItem> topItemsToProcess = sortedItems.stream().limit(1).toList();
+            List<String> linkList = topItemsToProcess.stream().map(NaverBlogItem::getLink).filter(Objects::nonNull).collect(Collectors.toList());
 
-            List<NaverBlogItem> topItemsToProcess = sortedItems.stream()
-                    .limit(1)
-                    .collect(Collectors.toList());
-
-            List<String> linkList = topItemsToProcess.stream()
-                    .map(NaverBlogItem::getLink)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
 
             if (linkList.isEmpty()) {
                 return ResponseEntity.ok(Map.of("message", "처리할 유효한 블로그 링크가 없습니다."));
@@ -121,7 +106,7 @@ public class SearchBackController {
 
             Map<String, String> crawledData = crawlingService.getBlogContent(linkList);
 
-            List<Restaurants> restaurantEntities = crawledData.entrySet().stream()
+            restaurantEntities = crawledData.entrySet().stream()
                     .map(entry -> {
                         String blogLink = entry.getKey();
                         String blogContent = entry.getValue();
@@ -129,7 +114,7 @@ public class SearchBackController {
                             String gptSummaryJsonString = gptApiService.summarizeBlog(blogContent);
                             String pureJsonString = gptSummaryJsonString.replace("```json\n", "").replace("\n```", "");
 
-                            if (pureJsonString == null || pureJsonString.trim().isEmpty()) {
+                            if (pureJsonString.trim().isEmpty()) {
                                 log.warn("GPT summary JSON string is empty for blog link: {}", blogLink);
                                 return null;
                             }
@@ -140,6 +125,7 @@ public class SearchBackController {
                                 return null;
                             }
 
+//                            이미 있는거 리턴하는것으로 끝냄
                             Optional<Restaurants> existingRestaurantOpt = restaurantRepository.findByAddress(summaryDto.getAddress());
                             if (existingRestaurantOpt.isPresent()) {
                                 log.info("Restaurant at address '{}' already exists. Loading from DB. Source blog: {}", summaryDto.getAddress(), blogLink);
@@ -181,15 +167,29 @@ public class SearchBackController {
                     })
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
+//          여기까지 restaurants에 api검색으로 이미있다면 기존 DB에서 불러오고 아니라면 api로 생성한걸 넣는 리스트 생성
+//            현재는 1개만 되도록 되어있고 api검색으로 나온 address로 비교를해서 DB에 있는 유무를 따집니다.
+//            있다면 기존의 DB에서 꺼낸걸 리턴함
 
             if (restaurantEntities.isEmpty()) {
                 return ResponseEntity.ok(Map.of("message", "추출된 식당 정보가 없습니다."));
             }
 
-            List<Restaurants> savedOrUpdatedRestaurants = restaurantRepository.saveAll(restaurantEntities);
-            log.info("{} restaurant entries processed (saved/updated) in DB.", savedOrUpdatedRestaurants.size());
+//            ❗❗❗개발용
+            Long currentUserId = 1L;
 
-            return ResponseEntity.ok(savedOrUpdatedRestaurants);
+//            실제 DB에 적재하는 서비스( Transaction )
+//            1. 만약 레스토랑 DB에 비어있다면 DB적재
+            if (restaurantRepository.findByAddress(restaurantEntities.get(0).getAddress()).isEmpty()) {
+                searchAndPostService.CreateRestaurants(restaurantEntities);
+            }
+//            2. 만약 posts DB 비어있다면 DB적재
+            if (postsRepository.findByUserIdAndRestaurantName(currentUserId, restaurantEntities.get(0).getRestaurant_name()).isEmpty()) {
+                searchAndPostService.CreatePosts(restaurantEntities, currentUserId);
+            }
+
+//            레스토랑 리스트를 리턴(현재는 1개 요소)
+            return ResponseEntity.ok(restaurantEntities);
 
         } catch (JsonProcessingException e) {
             log.error("Naver API 응답 처리 중 JSON 오류 발생: {}", e.getMessage(), e);

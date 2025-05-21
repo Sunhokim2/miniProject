@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static jakarta.persistence.FetchType.LAZY;
 
@@ -42,6 +43,6 @@ public class Posts {
 public Posts(Long userId, Restaurants restaurant) {
     this.userId = userId;
     this.restaurant = restaurant;
-    this.createdAt = LocalDateTime.now();
+    this.createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS); // 초 단위 절삭 적용
 }
 }

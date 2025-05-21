@@ -88,12 +88,12 @@ public class SearchController {
                                 LocalDate date2 = LocalDate.parse(item2.getPostdate(), dateFormatter);
                                 return date2.compareTo(date1); // 최신 날짜가 먼저 오도록 (내림차순)
                             })
-                            .collect(Collectors.toList());
+                            .toList();
 
 
                     List<NaverBlogItem> top3Items = sortedItems.stream()
                             .limit(1)
-                            .collect(Collectors.toList());
+                            .toList();
 
                     // 3. 요청된 필드(title, link, bloggername, postdate)만 추출하여 새로운 리스트 생성
                     List<Map<String, String>> processedResults = top3Items.stream()
@@ -103,7 +103,7 @@ public class SearchController {
                                     "bloggername", item.getBloggername() != null ? item.getBloggername() : "",
                                     "postdate", item.getPostdate() != null ? item.getPostdate() : ""
                             ))
-                            .collect(Collectors.toList());
+                            .toList();
 
 //                    링크만 뽑아서 주기 (3개)
                     List<String> linkList = processedResults.stream()  // processedResults 리스트를 스트림으로 변환
