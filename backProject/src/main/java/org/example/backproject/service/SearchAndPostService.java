@@ -6,6 +6,7 @@ import org.example.backproject.entity.Posts;
 import org.example.backproject.entity.Restaurants;
 import org.example.backproject.repository.PostsRepository;
 import org.example.backproject.repository.RestaurantsRepository;
+import org.example.backproject.repository.UsersRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class SearchAndPostService {
 
     private final RestaurantsRepository restaurantsRepository;
     private final PostsRepository postsRepository;
+    private final UsersRepository usersRepository;
 
     @Transactional
     public void CreateRestaurants(
@@ -53,7 +55,9 @@ public class SearchAndPostService {
             Optional<Posts> post = postsRepository.findByUserIdAndRestaurantName(userId, restaurantNameForCheck);
             if (post.isEmpty()) {
                 log.info("포스트 user_id: {} 그리고 restaurant_name: '{}' with visited=true already exists. Skipping.", userId, restaurantNameForCheck);
-                Posts newPost = new Posts(userId, restaurant);
+
+
+                Posts newPost = new Posts(usersRepository.findById(userId).get(), restaurant);
 
                 newPost.setLatitude(restaurant.getLatitude());
                 newPost.setLongitude(restaurant.getLongitude());

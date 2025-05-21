@@ -2,6 +2,8 @@ package org.example.backproject.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.backproject.repository.UsersRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -19,12 +21,11 @@ public class Posts {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @ManyToOne(fetch = LAZY, optional = false)
-//    @JoinColumn(name = "user_id", nullable = false)
-//    private Users user;
+    @ManyToOne(fetch = LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
 
-//    ❗❗❗❗개발용임시 user_id
-    private Long userId;
+
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "restaurant_id")
@@ -39,10 +40,15 @@ public class Posts {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-//    ❗❗❗❗❗개발용으로 추가한 생성자입니다.
-public Posts(Long userId, Restaurants restaurant) {
-    this.userId = userId;
-    this.restaurant = restaurant;
-    this.createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS); // 초 단위 절삭 적용
-}
+    public void toggleVisited() {
+        this.visited = !this.visited;
+    }
+
+    //    ❗❗❗❗❗개발용으로 추가한 생성자입니다.
+    public Posts(Users user, Restaurants restaurant) {
+
+        this.user = user;
+        this.restaurant = restaurant;
+        this.createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS); // 초 단위 절삭 적용
+    }
 }
