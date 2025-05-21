@@ -1,7 +1,7 @@
 import React from "react";
 import "../css/Pages.css";
-import regionColors from '../korea_regions_colors.json';
-import categoryColors from '../category_colors.json'
+import regionColors from './korea_regions_colors.json';
+import categoryColors from './category_colors.json'
 
 interface Place {
   id: number;

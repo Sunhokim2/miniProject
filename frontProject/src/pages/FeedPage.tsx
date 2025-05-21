@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "../css/Pages.css";
-import regionColors from "../korea_regions_colors.json";
-import categoryColors from "../category_colors.json";
+import rawRegionColors from "./korea_regions_colors.json";
+import categoryColors from "./category_colors.json";
 import DetailedPage from "./DetailedPage"
 
 const FeedPage = () => {
@@ -32,6 +32,11 @@ interface Place {
   }[];
 }
 
+  // regionColors를 객체로 변환
+const regionColors = Object.fromEntries(
+  rawRegionColors.map(({ region, color }) => [region, color])
+);
+
   //dummy data
   const placesData =[
     {
@@ -40,7 +45,7 @@ interface Place {
           "https://cdn.imweb.me/upload/S2024013025a8a2a1c6644/13570ac6b056e.png",
         restaurant_name: "능동미나리 여의도점",
         category: "한식",
-        region: "영등포구",
+        region: "서울시 영등포구",
         mainMenu: ["미나리 수육 전골", "능동 육회비빔밥", "육전"],
         address: "서울 영등포구 의사당대로 127 롯데캐슬 엠파이어빌딩 1층 107호",
         body: "미나리가 듬뿍 들어간 수육전골과 육회비빔밥, 육전이 유명한 맛집. 술과 함께 즐기기 좋은 구성으로 여의도 직장인들의 저녁 술자리 성지로 떠오르는 중. 깔끔한 매장과 아기의자 구비, 테이블링 현장대기 시스템 운영. 국물이 점점 깊어지는 전골과 간장양념 육회비빔밥, 육전+비빔밥 조합이 환상적.",
@@ -70,7 +75,7 @@ interface Place {
         "https://d12zq4w4guyljn.cloudfront.net/750_750_20250106052220_photo1_22dd42f297ce.webp",
       restaurant_name: "소바하우스 멘야준 연남점",
       category: "일식",
-      region: "마포구",
+      region: "서울시 마포구",
       mainMenu: ["특선 소유라멘", "완탕", "흑돼지 슈마이"],
       description: "토핑의 퀄리티가 높은 라멘 맛집. 완탕과 슈마이가 특히 인기.",
       address: "서울 마포구 월드컵북로6길 84 1층",
@@ -99,7 +104,7 @@ interface Place {
         "https://img.siksinhot.com/place/1640215450796032.jpeg",
         restaurant_name: "도넛정수 창신",
       category: "카페",
-      region: "종로구",
+      region: "서울시 종로구",
       mainMenu: ["초코 바나나 도넛", "쑥 초코 도넛", "아메리카노"],
       description: "서울 절벽골목에서 서울 뷰와 함께 즐기는 수제 도넛 카페.",
       address: "서울 종로구 창신12길 40",
@@ -127,7 +132,7 @@ interface Place {
       imageUrl: "https://blog.kakaocdn.net/dn/bfdTpz/btrDFKZBOKJ/QSI1BH8CfvFOjeuFqf7VQk/img.jpg",
         restaurant_name: "핫쵸 성수",
       category: "일식",
-      region: "성동구",
+      region: "서울시 성동구",
       mainMenu: ["히로시마 오코노미야끼", "명란 크림 돈페야끼", "야끼소바"],
       description: "퍼포먼스 철판 요리가 볼거리인 성수 오코노미야끼 전문점.",
       address: "서울 성동구 왕십리로5길 9-20 1층",
@@ -155,7 +160,7 @@ interface Place {
       imageUrl: "https://d12zq4w4guyljn.cloudfront.net/750_750_20240408075829_photo1_b0799598ca1c.webp",
         restaurant_name: "와일드플라워 방배",
       category: "양식",
-      region: "서초구",
+      region: "서울시 서초구",
       mainMenu: ["트러플 들깨 궁채 파스타", "숨비소리 리조또", "레터링 서비스 디저트"],
       description: "감성 가득한 방배동 레스토랑. 레터링 디저트 서비스로 기념일 추천.",
       address: "서울 서초구 방배로 84 1층",
@@ -183,7 +188,7 @@ interface Place {
       imageUrl: "https://mblogthumb-phinf.pstatic.net/MjAyMzEwMTZfMTUw/MDAxNjk3NDIzMjM4MzQ3.8Noyj6gr_uhPryMvUJldWbYuT3TP0RfgQ3Ljvd9VJ88g.cM0se-jk5J8mDcBOGogmtpNVXUZ2QQOGf_zCm5uads4g.JPEG.flak4121/IMG_9041.jpg?type=w800",
       restaurant_name: "카츠바이콘반 도산공원점",
       category: "일식",
-      region: "강남구",
+      region: "서울시 강남구",
       mainMenu: ["상로스카츠", "미니 카레", "돈지루"],
       description: "두툼한 특등심 돈카츠와 향신료 진한 카레가 인기인 도산공원 돈카츠 맛집.",
       address: "서울 강남구 선릉로153길 36 1층",
@@ -211,7 +216,7 @@ interface Place {
       imageUrl: "https://blog.kakaocdn.net/dn/B0jO4/btrSI9RAQ3k/Xwz65YNvR5zwOYbpNXx4p1/img.jpg",
       restaurant_name: "그라데이션커피 성수",
       category: "카페",
-      region: "성동구",
+      region: "서울시 성동구",
       mainMenu: ["핸드드립 위스키 배럴", "코스타리카 하시엔다 코페이"],
       description: "위스키 배럴 숙성 원두가 시그니처인 핸드드립 전문 카페.",
       address: "서울 성동구 상원12길 24-1 1층",
@@ -239,7 +244,7 @@ interface Place {
       imageUrl: "https://img1.daumcdn.net/thumb/R1280x0/?fname=http://t1.daumcdn.net/brunch/service/user/3fy/image/OUgALVYv5pBILsEFofbmJsxevOw.jpg",
       restaurant_name: "코끼리베이글 인사동",
       category: "카페",
-      region: "종로구",
+      region: "서울시 종로구",
       mainMenu: ["버터 솔트 베이글", "아메리카노"],
       description: "화덕에 구운 쫀득 담백한 베이글이 인기인 인사동 베이글 맛집.",
       address: "서울 종로구 인사동길 35-3",
@@ -295,7 +300,7 @@ interface Place {
       imageUrl: "https://img.siksinhot.com/place/1443970776790487.jpg?w=560&h=448&c=Y",
       restaurant_name: "안성댁부대찌개 대전",
       category: "한식",
-      region: "유성구",
+      region: "대전시 유성구",
       mainMenu: ["부대찌개", "삼겹살"],
       description: "깔끔한 국물이 매력적인 대전 현지인 부대찌개 맛집.",
       address: "대전 유성구 북유성대로 391",
@@ -323,7 +328,7 @@ interface Place {
       imageUrl: "https://mblogthumb-phinf.pstatic.net/MjAyMzA0MjZfMTU5/MDAxNjgyNDM5MjU1MzQ1.R0DPhaxUT2BI9CQRNummin7J8cb5uQVCc17Z9I_m8Nkg.Q_i1hxJRVXmdXBPXlyipsGr7HH3x1OJJZVB54IqOrIQg.JPEG.queen7165/IMG_8597.jpg?type=w800",
       restaurant_name: "프루 Fru",
       category: "술집",
-      region: "종로구",
+      region: "서울시 종로구",
       mainMenu: ["모둠 사시미", "매콤 파스타", "참치 후토마키"],
       description: "일본 감성의 다찌 이자카야. 사시미와 명란 계란말이가 인기이며 시티팝 분위기 물씬.",
       address: "서울 종로구 북촌로5길 10",
@@ -351,7 +356,7 @@ interface Place {
       imageUrl: "https://design.co.kr/wp-content/uploads/2024/07/%EC%B0%A8%EC%B0%A8%EC%9D%B4%ED%85%8C_%EB%B3%B8%EC%B0%A8-%ED%8C%8C%EB%A5%B4%ED%8E%98-832x1109.jpg",
       restaurant_name: "차차이테",
       category: "카페",
-      region: "용산구",
+      region: "서울시 용산구",
       mainMenu: ["맞이차", "본차+과자", "밀크티+스콘"],
       description: "차와 과자를 코스로 즐기는 한남동 예약제 티룸. 분위기 좋은 디저트 공간.",
       address: "서울 용산구 이태원로54길 74 2층",
@@ -379,7 +384,7 @@ interface Place {
       imageUrl: "https://d12zq4w4guyljn.cloudfront.net/750_750_20250218121009125_photo_8de4c3974a4b.webp",
       restaurant_name: "금제",
       category: "일식",
-      region: "관악구",
+      region: "서울시 관악구",
       mainMenu: ["특로스가츠", "히레가츠", "가츠산도"],
       description: "저온 조리로 튀긴 프리미엄 로스가츠가 인기인 신림 돈카츠 맛집.",
       address: "서울 관악구 조원로 101 1층",
@@ -513,7 +518,7 @@ interface Place {
   
 
   //방문 & 북마크 토글 기능 구현
-  const toggleVisited = (id: number) => {
+  const toggleVisited = async (id: number) => {
     setPlacesData((prevPlaces) =>
       prevPlaces.map((place) =>
         place.id === id ? { ...place, visited: !place.visited } : place
@@ -522,8 +527,22 @@ interface Place {
     setSelectedPlace((prev) =>
       prev && prev.id === id ? { ...prev, visited: !prev.visited } : prev
     );
+
+    const updatedVisited = !selectedPlace?.visited;
+    const url = "http://localhost:8080/api/places/" //url 바꿔야함
+    try {
+      await fetch(url + id + "/visited", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ visited: updatedVisited }),
+      });
+    } catch (err) {
+      console.error("방문 상태 업데이트 실패", err);
+    }
   };
-  const toggleBookmarked = (id: number) => {
+  const toggleBookmarked = async (id: number) => {
     setPlacesData((prevPlaces) =>
       prevPlaces.map((place) =>
         place.id === id ? { ...place, bookmarked: !place.bookmarked } : place
@@ -532,6 +551,19 @@ interface Place {
     setSelectedPlace((prev) =>
       prev && prev.id === id ? { ...prev, bookmarked: !prev.bookmarked } : prev
     );
+    const updatedBookmarked = !selectedPlace?.bookmarked;
+    const url = "http://localhost:8080/api/places/" //url 바꿔야함
+    try {
+      await fetch(url + id + "/bookmarked", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ visited: updatedBookmarked }),
+      });
+    } catch (err) {
+      console.error("즐겨찾기 상태 업데이트 실패", err);
+    }
   };
 
 
@@ -553,8 +585,23 @@ interface Place {
     <div className="container mx-auto mt-4 px-4">
       {/* 검색 필드*/}
       <div className="flex justify-center my-4">
-          <form className="flex items-center gap-2">
-            {/* <label htmlFor="searchInput" className="font-semibold">검색:</label> */}
+          <form 
+          className="flex items-center gap-2"
+          onSubmit={(e)=>{
+            e.preventDefault();
+            const keyword = (e.currentTarget.elements.namedItem("searchInput") as HTMLInputElement).value;
+            const url = "http://localhost:8080/api/places" // url 바꾸기
+            let query = `?search=${encodeURIComponent(keyword)}`;
+            fetch(url + query)
+            .then((res)=> res.json())
+            .then((data) => {
+              setPlacesData(data);
+              setVisibleCount(10);
+            })
+            .catch((err) => console.error("검색 실패", err));
+          }}
+          >
+            
             <input
               type="text"
               id="searchInput"
