@@ -2,12 +2,28 @@ import React, { useState } from 'react';
 import '../css/Login.css'; // Adjust the path as necessary
 import { Link, useNavigate } from 'react-router-dom';
 import GoogleLoginButton from '../components/GoogleLogin';
-
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import EmailIcon from '@mui/icons-material/Email';
+import LockIcon from '@mui/icons-material/Lock';
 const Login = () => {
+
     const [formData, setFormData] = useState({
         username: '',
         password: '',
     });
+
+    const handleKakaoLogin = () => {
+        window.location.href = getKakaoLoginUrl();
+    };
+
+    const handleGoogleLogin = () => {
+        window.location.href = getGoogleLoginUrl();
+    };
+
+
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -33,7 +49,7 @@ const Login = () => {
                 navigate('/loginlanding');
             } else {
                 alert('Login failed. Please check your credentials.');
-                console.log('Login failed:'+ JSON.stringify(response));
+                console.log('Login failed:' + JSON.stringify(response));
             }
         } catch (error) {
             console.error('Error during login:', error);
