@@ -1,5 +1,5 @@
-import {GoogleLogin} from "@react-oauth/google";
-import {GoogleOAuthProvider} from "@react-oauth/google";
+// import {GoogleLogin} from "@react-oauth/google";
+// import {GoogleOAuthProvider} from "@react-oauth/google";
 import { redirect, useNavigate } from "react-router-dom";
 
 const GoogleLoginButton = () => {
