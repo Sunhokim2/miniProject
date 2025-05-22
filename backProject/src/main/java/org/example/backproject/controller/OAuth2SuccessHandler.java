@@ -22,7 +22,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String email = oAuth2User.getAttribute("email");
         String jwt = jwtUtil.createToken(email);
         
-        String redirectUrl = "http://localhost:5173/loginlanding?token=" + jwt;
+        String redirectUrl = "http://localhost:5173/?token=" + jwt;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
 
         
