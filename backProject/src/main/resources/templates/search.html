@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>네이버 통합 검색</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding-top: 5vh; background-color: #f8f9fa; min-height: 95vh; }
+        .search-container { text-align: center; width: 100%; max-width: 700px; /* 너비 조정 */ }
+        .search-logo { font-size: 3em; color: #03C75A; font-weight: bold; margin-bottom: 20px; }
+        .search-box { display: flex; justify-content: center; align-items: center; border: 1px solid #ccc; border-radius: 25px; padding: 5px 10px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .search-box input[type="text"] { border: none; outline: none; padding: 10px; font-size: 16px; flex-grow: 1; }
+        .search-box button { background-color: #03C75A; color: white; border: none; border-radius: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; margin-left: 10px; }
+        .search-box button:hover { background-color: #00a74a; }
+
+        .results-container { margin-top: 20px; width: 100%; text-align: left; }
+        .results-container h2 { color: #333; font-size: 1.2em; margin-bottom: 10px; padding-left: 10px;}
+        .results-container pre {
+            background-color: #e9e9e9;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.9em;
+            border: 1px solid #ddd;
+            max-height: 500px; /* 결과가 너무 길 경우 스크롤 */
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="search-container">
+    <div class="search-logo">NAVER Search</div>
+    <form th:action="@{/}" method="get" class="search-box">
+        <input type="text" name="query" placeholder="검색어를 입력하세요" th:value="${searchQuery}" autofocus/>
+        <button type="submit">검색</button>
+    </form>
+
+    <div th:if="${searchResultsJson != null}" class="results-container">
+        <h2>"<span th:text="${searchQuery}"></span>" 검색 결과 (JSON)</h2>
+        <pre id="json-output"></pre>
+    </div>
+    <div th:if="${searchResultsJson == null && searchQuery != null && searchQuery.trim().isEmpty()}" class="results-container">
+        <h2>검색어를 입력해주세요.</h2>
+    </div>
+    <div th:if="${searchResultsJson == null && searchQuery == null}" class="results-container">
+    </div>
+</div>
+
+<script th:inline="javascript">
+    var rawJsonString = /*[[${searchResultsJson}]]*/ null;
+    if (rawJsonString) {
+        try {
+            var jsonObj = JSON.parse(rawJsonString);
+            document.getElementById('json-output').textContent = JSON.stringify(jsonObj, null, 2); // 들여쓰기
+        } catch (e) {
+            // 파싱 실패 시 원본 문자열 또는 에러 메시지 표시
+            document.getElementById('json-output').textContent = "Error parsing JSON: " + e.message + "\n\n" + rawJsonString;
+        }
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

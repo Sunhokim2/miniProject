@@ -44,9 +44,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Mock 데이터 사용 여부를 환경 변수로 제어
-    if (import.meta.env.VITE_USE_MOCK_DATA) {
-      setUser(mockUser);
-    }
+    // if (import.meta.env.VITE_USE_MOCK_DATA) {
+    //   setUser(mockUser);
+    // }
     setIsLoading(false);
   }, []);
 
@@ -56,11 +56,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null);
       
       // Mock 데이터 사용 여부를 환경 변수로 제어
-      if (import.meta.env.VITE_USE_MOCK_DATA) {
-        console.log('Mock 데이터 사용: Mockup 사용자로 로그인');
-        setUser(mockUser);
-        return;
-      }
+      // if (import.meta.env.VITE_USE_MOCK_DATA) {
+      //   console.log('Mock 데이터 사용: Mockup 사용자로 로그인');
+      //   setUser(mockUser);
+      //   return;
+      // }
       
       // TODO: 실제 API 호출로 대체
       throw new Error('API가 구현되지 않았습니다.');
@@ -91,9 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
       // TODO: 실제 API 호출로 대체
-      if (import.meta.env.VITE_USE_MOCK_DATA) {
-        setUser(mockUser);
-      }
+      // if (import.meta.env.VITE_USE_MOCK_DATA) {
+      //   setUser(mockUser);
+      // }
     } catch (err) {
       setError(err instanceof Error ? err.message : '회원가입 중 오류가 발생했습니다.');
       throw err;

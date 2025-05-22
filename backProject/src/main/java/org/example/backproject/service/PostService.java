@@ -3,8 +3,8 @@ package org.example.backproject.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.backproject.dto.post.PostListItemResponse;
-import org.example.backproject.entity.Post;
-import org.example.backproject.repository.PostRepository;
+import org.example.backproject.entity.Posts;
+import org.example.backproject.repository.PostsRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,10 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class PostService {
 
-    private final PostRepository postRepository;
+    private final PostsRepository postRepository;
 
     public Page<PostListItemResponse> getPosts(Long userId, Pageable pageable, Boolean visited) {
-        Page<Post> postPage;
+        Page<Posts> postPage;
 
         if (visited == null) {
             postPage = postRepository.findAllByUserId(userId, pageable);
@@ -42,7 +42,7 @@ public class PostService {
 
     @Transactional
     public void toggleVisited(Long userId, Long postId) {
-        Post post = postRepository.findById(postId)
+        Posts post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("post not found with id: " + postId));
 
         if (post.getUser().getId().equals(userId)) {

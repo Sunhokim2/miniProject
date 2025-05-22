@@ -23,13 +23,15 @@ export const oauthConfig = {
 // 카카오 로그인 URL 생성
 export const getKakaoLoginUrl = () => {
   const { clientId, redirectUri } = oauthConfig.kakao;
-  return `https://kauth.kakao.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
+  // return `https://kauth.kakao.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
+  return "http://localhost:8080/oauth2/authorization/kakao";
 };
 
 // 구글 로그인 URL 생성
 export const getGoogleLoginUrl = () => {
   const { clientId, redirectUri } = oauthConfig.google;
   return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=email profile`;
+  return "http://localhost:8080/oauth2/authorization/google";
 };
 
 // 애플 로그인 URL 생성
