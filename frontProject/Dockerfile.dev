@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 5173
+
+ENV NODE_ENV=development
+ENV VITE_HOST=0.0.0.0
+ENV VITE_PORT=5173
+
+ARG VITE_NAVER_CLIENT_ID
+ENV VITE_NAVER_CLIENT_ID=$VITE_NAVER_CLIENT_ID
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"] 

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="맛집 기록 및 공유 웹 애플리케이션" />
+    <meta name="theme-color" content="#4f46e5" />
+    <title>MATZIP - 나만의 맛집 지도</title>
+    <script type="text/javascript">
+      window.NAVER_CLIENT_ID = "%VITE_NAVER_CLIENT_ID%";
+    </script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=%VITE_NAVER_CLIENT_ID%"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
