@@ -58,7 +58,7 @@ const Login = () => {
                 const data = await response.json();
                 alert('Login successful!');
                 // 로그인 성공 후 원하는 페이지로 이동
-                navigate('/loginlanding');
+                navigate('/');//search로 이동
             } else {
                 alert('Login failed. Please check your credentials.');
                 console.log('Login failed:' + JSON.stringify(response));
