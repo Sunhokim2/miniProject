@@ -1,9 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { User, Bookmark } from '@/mocks/users';
-import { Restaurant } from '@/mocks/restaurants';
-import { users, bookmarks } from '@/mocks/users';
-import { restaurants } from '@/mocks/restaurants';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import RestaurantDetail from '@/components/restaurants/RestaurantDetail';
 import SearchInput from '@/components/common/SearchInput';
@@ -17,6 +13,35 @@ import Button from '@mui/material/Button';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import AddIcon from '@mui/icons-material/Add';
 import { useAuth } from '@/hooks/useAuth';
+import regionColors from './korea_regions_colors.json';
+import categoryColors from './category_colors.json';
+
+interface RegionColor {
+  region: string;
+  color: string;
+}
+
+interface CategoryColor {
+  [key: string]: string;
+}
+
+interface Restaurant {
+  id: number;
+  restaurant: string;
+  category: string;
+  region: string;
+  rate: number;
+  image: string;
+  imageUrl: string;
+  description: string;
+  main_menu: string[];
+  address: string;
+  body: string;
+  latitude: number;
+  longitude: number;
+  source: string;
+  status: string;
+}
 
 const MyPage = () => {
   const { user } = useAuth();
@@ -27,40 +52,76 @@ const MyPage = () => {
   const [sortBy, setSortBy] = useState('latest');
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [selectCategory, setSelectedCategory] = useState("전체");
+  const [selectRegion, setSelectedRegion] = useState("전체");
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastRestaurantRef = useRef<HTMLDivElement | null>(null);
 
-  // 더미데이터 사용
-  const { data: userData, isLoading: isUserLoading, error: userError } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => Promise.resolve({ data: users }),
-  });
+  const regionColorsMap = (regionColors as RegionColor[]).reduce((acc, curr) => {
+    acc[curr.region] = curr.color;
+    return acc;
+  }, {} as { [key: string]: string });
 
+  const categoryList = ["전체", ...Object.keys(categoryColors as CategoryColor)];
+  const regionList = ["전체", ...Object.keys(regionColorsMap)];
+
+  // 북마크된 레스토랑 데이터 가져오기
   const { data: bookmarkData, isLoading: isBookmarkLoading, error: bookmarkError } = useQuery({
     queryKey: ['bookmarks'],
-    queryFn: () => Promise.resolve({ data: bookmarks }),
-  });
+    queryFn: async () => {
+      console.log('북마크 데이터 요청 시작');
+      const token = localStorage.getItem('token');
+      console.log('사용할 토큰:', token);
+      
+      if (!token) throw new Error('인증 토큰이 없습니다.');
+      
+      const response = await fetch('http://localhost:8080/api/bookmarks/user', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('북마크 데이터 응답:', response);
+      
+      if (!response.ok) throw new Error('북마크 데이터를 가져오는데 실패했습니다.');
+      
+      const data = await response.json();
+      console.log('북마크 데이터:', data);
 
-  const { data: restaurantData, isLoading: isRestaurantLoading, error: restaurantError } = useQuery({
-    queryKey: ['restaurants'],
-    queryFn: () => Promise.resolve({ data: restaurants }),
+      // 백엔드에서 온 데이터 형식에 맞게 변환 (restaurant 객체가 중첩되어 있음)
+      return data.map((bookmark: any) => ({
+        id: bookmark.id,
+        restaurant: bookmark.restaurant.name,  // 레스토랑 이름
+        category: bookmark.restaurant.category,
+        region: bookmark.restaurant.region,
+        rate: bookmark.restaurant.rate,
+        address: bookmark.restaurant.address,
+        imageUrl: bookmark.restaurant.imageUrl,
+        restaurantId: bookmark.restaurant.id,  // 원래 레스토랑 ID를 별도로 저장
+        createdAt: bookmark.createdAt
+      }));
+    },
+    enabled: !!localStorage.getItem('token')
   });
-
-  // 로딩 상태와 에러 상태 계산
-  const isLoading = isUserLoading || isBookmarkLoading || isRestaurantLoading;
-  const error = userError || bookmarkError || restaurantError;
 
   // 데이터 로딩 상태 확인
   useEffect(() => {
-    console.log('Current User:', user);
-    console.log('User Data:', userData);
-    console.log('Bookmark Data:', bookmarkData);
-    console.log('Restaurant Data:', restaurantData);
-  }, [user, userData, bookmarkData, restaurantData]);
+    console.log('마이페이지 접근 - 현재 사용자 정보:', user);
+    console.log('마이페이지 접근 - 북마크 데이터:', bookmarkData);
+    console.log('마이페이지 접근 - 북마크 로딩 상태:', isBookmarkLoading);
+    console.log('마이페이지 접근 - 북마크 에러:', bookmarkError);
+  }, [user, bookmarkData, isBookmarkLoading, bookmarkError]);
+
+  // 데이터가 변경될 때 다음 페이지 여부 확인
+  useEffect(() => {
+    if (bookmarkData) {
+      setHasNextPage(page < Math.ceil(bookmarkData.length / 10));
+    }
+  }, [bookmarkData, page]);
 
   // 무한 스크롤 처리
   const lastRestaurantCallback = useCallback((node: HTMLDivElement | null) => {
-    if (isRestaurantLoading || isBookmarkLoading) return;
+    if (isBookmarkLoading) return;
     
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -76,19 +137,7 @@ const MyPage = () => {
       lastRestaurantRef.current = node;
       observerRef.current.observe(node);
     }
-  }, [isRestaurantLoading, isBookmarkLoading, hasNextPage]);
-
-  // 데이터가 변경될 때 다음 페이지 여부 확인
-  useEffect(() => {
-    if (bookmarkData && restaurantData) {
-      const bookmarkedRestaurants = restaurantData.data.filter(restaurant =>
-        bookmarkData.data.some(bookmark => 
-          bookmark.restaurant_id === restaurant.id && bookmark.user_id === user?.id
-        )
-      );
-      setHasNextPage(page < Math.ceil(bookmarkedRestaurants.length / 10));
-    }
-  }, [bookmarkData, restaurantData, page, user?.id]);
+  }, [isBookmarkLoading, hasNextPage]);
 
   // 검색 처리
   const handleSearch = (keyword: string) => {
@@ -110,13 +159,23 @@ const MyPage = () => {
 
   // 북마크된 레스토랑 목록 렌더링
   const renderBookmarkedRestaurants = () => {
-    if (!bookmarkData || !restaurantData) return null;
+    if (!bookmarkData) return null;
 
-    const bookmarkedRestaurants = restaurantData.data.filter(restaurant =>
-      bookmarkData.data.some(bookmark => 
-        bookmark.restaurant_id === restaurant.id && bookmark.user_id === user?.id
-      )
-    );
+    let bookmarkedRestaurants = [...bookmarkData];
+
+    // 카테고리 필터링
+    if (selectCategory !== "전체") {
+      bookmarkedRestaurants = bookmarkedRestaurants.filter(
+        restaurant => restaurant.category === selectCategory
+      );
+    }
+
+    // 지역 필터링
+    if (selectRegion !== "전체") {
+      bookmarkedRestaurants = bookmarkedRestaurants.filter(
+        restaurant => restaurant.region === selectRegion
+      );
+    }
 
     if (!bookmarkedRestaurants.length) {
       return (
@@ -142,15 +201,14 @@ const MyPage = () => {
     }
 
     // 검색어 필터링
-    let filteredRestaurants = bookmarkedRestaurants;
     if (searchKeyword) {
-      filteredRestaurants = filteredRestaurants.filter(restaurant =>
+      bookmarkedRestaurants = bookmarkedRestaurants.filter(restaurant =>
         restaurant.restaurant.toLowerCase().includes(searchKeyword.toLowerCase())
       );
     }
 
     // 정렬 적용
-    filteredRestaurants = [...filteredRestaurants].sort((a, b) => {
+    bookmarkedRestaurants = [...bookmarkedRestaurants].sort((a, b) => {
       switch (sortBy) {
         case 'latest':
           return b.id - a.id;
@@ -164,7 +222,7 @@ const MyPage = () => {
     // 페이지네이션 적용
     const startIndex = (page - 1) * 10;
     const endIndex = startIndex + 10;
-    const paginatedRestaurants = filteredRestaurants.slice(startIndex, endIndex);
+    const paginatedRestaurants = bookmarkedRestaurants.slice(startIndex, endIndex);
 
     return (
       <Grid container spacing={3}>
@@ -182,125 +240,75 @@ const MyPage = () => {
     );
   };
 
-  if (isLoading) return <Box className="p-4">로딩 중...</Box>;
-  if (error) return <Box className="p-4">에러가 발생했습니다.</Box>;
-  if (!user) return <Box className="p-4">사용자 정보를 찾을 수 없습니다.</Box>;
+  if (isBookmarkLoading) {
+    return (
+      <Box className="flex justify-center items-center min-h-screen">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (bookmarkError) {
+    return (
+      <Alert severity="error" className="m-4">
+        {bookmarkError instanceof Error ? bookmarkError.message : '데이터를 불러오는데 실패했습니다.'}
+      </Alert>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 프로필 섹션 */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="h-20 w-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-              <span className="text-2xl text-gray-500 dark:text-gray-300">
-                {user.user_name.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user.user_name}</h2>
-              <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 탭 네비게이션 */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
-          <nav className="flex border-b border-gray-200 dark:border-gray-700">
-            <button
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === 'profile'
-                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-              onClick={() => setActiveTab('profile')}
-            >
-              프로필
-            </button>
-            <button
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === 'bookmarks'
-                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-              onClick={() => setActiveTab('bookmarks')}
-            >
-              저장한 맛집
-            </button>
-          </nav>
-        </div>
-
-        {/* 탭 컨텐츠 */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-          {activeTab === 'profile' && (
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">프로필 정보</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">이름</label>
-                  <p className="mt-1 text-gray-900 dark:text-white">{user.user_name}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">이메일</label>
-                  <p className="mt-1 text-gray-900 dark:text-white">{user.email}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">가입일</label>
-                  <p className="mt-1 text-gray-900 dark:text-white">{new Date(user.created_at).toLocaleDateString()}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'bookmarks' && (
-            <div>
-              <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <Typography variant="h4" component="h1" className="font-bold text-gray-900 dark:text-white">
-                  저장한 맛집
-                </Typography>
-                
-                <div className="flex items-center space-x-2 w-full md:w-auto">
-                  <SearchInput
-                    placeholder="맛집 검색"
-                    value={searchKeyword}
-                    onChange={(e) => setSearchKeyword(e.target.value)}
-                    onSearch={handleSearch}
-                    className="flex-grow md:w-64"
-                  />
-                  
-                  <SortSelect
-                    value={sortBy}
-                    onChange={handleSortChange}
-                    options={[
-                      { value: 'latest', label: '최신순' },
-                      { value: 'rating', label: '평점순' },
-                    ]}
-                  />
-                </div>
-              </div>
-              
-              {/* 에러 메시지 */}
-              {(restaurantError || bookmarkError) && (
-                <Alert severity="error" className="mb-4">
-                  데이터를 불러오는데 실패했습니다.
-                </Alert>
-              )}
-              
-              {/* 북마크된 레스토랑 목록 */}
-              {renderBookmarkedRestaurants()}
-              
-              {/* 로딩 인디케이터 */}
-              {(isRestaurantLoading || isBookmarkLoading) && (
-                <Box className="flex justify-center my-8">
-                  <CircularProgress />
-                </Box>
-              )}
-            </div>
-          )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-4">마이페이지</h1>
+        <div className="flex space-x-4 mb-6">
+          <Button
+            variant={activeTab === 'profile' ? 'contained' : 'outlined'}
+            onClick={() => setActiveTab('profile')}
+          >
+            프로필
+          </Button>
+          <Button
+            variant={activeTab === 'bookmarks' ? 'contained' : 'outlined'}
+            onClick={() => setActiveTab('bookmarks')}
+          >
+            북마크
+          </Button>
         </div>
       </div>
 
-      {/* 상세 정보 모달 */}
+      {activeTab === 'profile' ? (
+        <Box className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <Typography variant="h6" className="mb-4">
+            사용자 정보
+          </Typography>
+          <Typography>
+            이메일: {user?.email}
+          </Typography>
+          <Typography>
+            이름: {user?.user_name}
+          </Typography>
+        </Box>
+      ) : (
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <SearchInput 
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onSearch={handleSearch} 
+            />
+            <SortSelect 
+              value={sortBy} 
+              onChange={handleSortChange}
+              options={[
+                { value: 'latest', label: '최신순' },
+                { value: 'rating', label: '평점순' }
+              ]}
+            />
+          </div>
+          {renderBookmarkedRestaurants()}
+        </div>
+      )}
+
       {showDetailModal && selectedRestaurant && (
         <RestaurantDetail
           restaurant={selectedRestaurant}

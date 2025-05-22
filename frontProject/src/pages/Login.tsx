@@ -10,39 +10,41 @@ import Alert from '@mui/material/Alert';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import { getKakaoLoginUrl, getGoogleLoginUrl } from '../utils/oauth'; // Adjust the import path as necessary
-const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [username, setUsername] = useState('');
+
+interface FormData {
+    username: string;
+    password: string;
+}
+
+const Login: React.FC = () => {
+    const [email, setEmail] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [username, setUsername] = useState<string>('');
     // const [showError, setShowError] = useState(false);
     // const { login, isLoading, error } = useAuth();
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FormData>({
         username: '',
         password: '',
     });
 
-    const handleKakaoLogin = () => {
+    const handleKakaoLogin = (): void => {
         window.location.href = "http://localhost:8080/oauth2/authorization/kakao";
     };
 
-    const handleGoogleLogin = () => {
+    const handleGoogleLogin = (): void => {
         window.location.href = "http://localhost:8080/oauth2/authorization/google";
     };
 
-
-
-
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = async (e) => {
-
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         console.log('username:', username);
         console.log('email:', email);
-        const payload = { username, password }; // formData와 verificationCode를 포함한 payload 생성
+        const payload = { username, password };
         e.preventDefault();
         try {
             const response = await fetch('http://localhost:8080/api/auth/login', {
@@ -50,15 +52,13 @@ const Login = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // body: JSON.stringify(formData),
                 body: JSON.stringify(payload),
             });
 
             if (response.ok) {
                 const data = await response.json();
                 alert('Login successful!');
-                // 로그인 성공 후 원하는 페이지로 이동
-                navigate('/loginlanding');
+                navigate('/login-landing');
             } else {
                 alert('Login failed. Please check your credentials.');
                 console.log('Login failed:' + JSON.stringify(response));

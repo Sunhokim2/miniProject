@@ -31,6 +31,17 @@ export const signupApi = async (username: string, email: string, password: strin
   }
 };
 
+// 로그아웃 API
+export const logoutApi = async (token: string): Promise<void> => {
+  try {
+    await api.post('/auth/logout');
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || '로그아웃에 실패했습니다.'
+    );
+  }
+};
+
 // 카카오 로그인 API
 export const kakaoLoginApi = async (code: string): Promise<AuthResponse> => {
   try {

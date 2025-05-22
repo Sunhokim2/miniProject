@@ -10,7 +10,4 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"] 
-
-# (이미지 빌드 시 .env 파일을 /app에 복사)
-COPY .env .env
+ENTRYPOINT ["java", "-jar", "app.jar"]

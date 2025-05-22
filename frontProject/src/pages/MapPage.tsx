@@ -240,7 +240,7 @@ const MapPage = () => {
       )}
 
       {/* 검색 바 */}
-      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
         <SearchBar 
           onSearch={(keyword) => {
             // TODO: 검색 로직 구현

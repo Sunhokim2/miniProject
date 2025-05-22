@@ -16,6 +16,9 @@ import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
+import Search from './pages/Search';
+
+import LoginLanding from '@/pages/LoginLanding';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -47,6 +50,7 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login-landing" element={<LoginLanding />} />
         </Route>
         
         {/* Protected Routes */}
@@ -57,7 +61,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/" element={<MapPage />} />
+          <Route path="/" element={<Search />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/mypage" element={<MyPage />} />

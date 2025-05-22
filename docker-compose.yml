@@ -30,6 +30,8 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-backend
     ports:
       - "8080:8080"
+    env_file:
+      - ./.env
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-local:5432/${DB_NAME_LOCAL}
       - SPRING_DATASOURCE_USERNAME=${DB_USER_LOCAL}
@@ -40,11 +42,13 @@ services:
       - NAVER_MAP_SECRET=${NAVER_MAP_SECRET}
       - OPEN_API_URL=${OPEN_API_URL}
       - OPEN_API_KEY=${OPEN_API_KEY}
+    volumes:
+      - ./.env:/app/.env
     depends_on:
       - postgres-local
     networks:
       - app-network
-    restart: unless-stopped
+    restart: no
 
   postgres-local:
     container_name: ${COMPOSE_PROJECT_NAME}-postgres-local

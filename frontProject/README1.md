@@ -2,8 +2,7 @@
 
 - 일정 : 2025.05.23.~
 - 배포 URL : 
-- Test ID : ooo@naver.com
-- Test PW : 1234
+ 
 <br>
 
 ## 프로젝트 소개

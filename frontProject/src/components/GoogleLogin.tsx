@@ -2,29 +2,29 @@
 // import {GoogleOAuthProvider} from "@react-oauth/google";
 import { redirect, useNavigate } from "react-router-dom";
 
-const GoogleLoginButton = () => {
+interface GoogleResponse {
+    credential: string;
+}
+
+const GoogleLoginButton: React.FC = () => {
     const navigate = useNavigate();
     const clientId = '1018972340590-3cc2ajhnlnbu8jphvat8bcsnkumel3a2.apps.googleusercontent.com'
 
-    const sendCredential =async (res) =>{
-        try{
-            const response = await fetch('http//localhost:8080/****',{
-                method:'POST',
-                headers : {
-                    'Content-Type':'application/json',
+    const sendCredential = async (res: GoogleResponse): Promise<void> => {
+        try {
+            const response = await fetch('http//localhost:8080/****', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({res}),
+                body: JSON.stringify({ res }),
             });
-            if(response.ok){
+            if (response.ok) {
                 alert('success');
-            }else{
-                 alert("send credential fail" );
-                //alert(JSON.stringify(res.credential));
+            } else {
+                alert("send credential fail");
             }
-
-
-        }
-        catch(error){
+        } catch (error) {
             console.error("error sending credential : ", error);
         }
     };
@@ -33,13 +33,12 @@ const GoogleLoginButton = () => {
         <>
             <GoogleOAuthProvider clientId={clientId}>
                 <GoogleLogin
-                    onSuccess={(res) => {
+                    onSuccess={(res: GoogleResponse) => {
                         console.log(res);
-
                         sendCredential(res);
-                        navigate('/loginlanding');
+                        navigate('/login-landing');
                     }}
-                    onFailure={(err) => {
+                    onFailure={(err: Error) => {
                         console.log(err);
                     }}
                 />
