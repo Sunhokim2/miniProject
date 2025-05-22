@@ -19,8 +19,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { name: '지도', path: '/map', icon: <MapIcon /> },
     { name: '피드', path: '/feed', icon: <FeedIcon /> },
+    { name: '지도', path: '/map', icon: <MapIcon /> },
     { name: '마이페이지', path: '/mypage', icon: <BookmarkIcon /> },
     { name: '설정', path: '/settings', icon: <SettingsIcon /> },
   ];
