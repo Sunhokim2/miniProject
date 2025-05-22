@@ -1,11 +1,14 @@
 import React from 'react';
+import Button from '@mui/material/Button';
 
-const EmailVerification = ({email}) => {
-     const sendEmailAddress = async () => {
+const EmailVerification = ({ email }) => {
+    const sendEmailAddress = async () => {
         //console.log('email:', email);
         try {
             const response = await fetch('http://localhost:8080/api/auth/email', { // Spring API 엔드포인트
                 method: 'POST',
+                url:'http://localhost:8080/api/auth/email',
+                data:{},
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -17,6 +20,8 @@ const EmailVerification = ({email}) => {
                 alert('send email send to spring successfully!');
             } else {
                 alert('Failed to send email-address.');
+                console.log(response);
+                console.log(email);
             }
         } catch (error) {
             console.error('Error sending email-address:', error);
@@ -25,13 +30,19 @@ const EmailVerification = ({email}) => {
     };
     return (
         <div className="form-group">
-            
-            <button 
-                type="button" 
-                className="verify-button"
-                onClick={sendEmailAddress}>
+
+            <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={sendEmailAddress}
+                className="py-3 mt-4">
+
                 Send Verification Code
-            </button>
+            </Button>
+
         </div>
     );
 };
