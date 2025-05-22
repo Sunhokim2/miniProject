@@ -6,6 +6,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.security.core.userdetails.User;
 
 import lombok.RequiredArgsConstructor;
@@ -35,4 +38,8 @@ public class UsersService implements UserDetailsService {
                 .build();
     }
 
+    @Transactional
+    public void deleteByEmail(String email){
+        usersRepository.deleteByEmail(email);
+    }
 }

@@ -31,7 +31,6 @@ public class AuthService {
         if (code == null || !code.equals(dto.getCode())) {
             throw new RuntimeException("{\"message\": \"이메일 인증 코드가 일치하지 않습니다.\"}");
         }
-
         if (usersRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("{\"message\": \"이미 등록된 이메일입니다.\"}");
         }
