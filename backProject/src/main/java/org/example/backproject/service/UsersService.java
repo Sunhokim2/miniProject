@@ -33,8 +33,7 @@ public class UsersService implements UserDetailsService {
     }
 
     @Transactional
-    public void deleteByEmail(String email) {
+    public void deleteByEmail(String email){
         usersRepository.deleteByEmail(email);
     }
-
 }

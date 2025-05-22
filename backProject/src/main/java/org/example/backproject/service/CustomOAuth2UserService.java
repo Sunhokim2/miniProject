@@ -42,6 +42,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
+
+        // google
         ClientRegistration googleRegistration = ClientRegistration.withRegistrationId("google")
                 .clientId(dotenv.get("GOOGLE_CLIENT_ID"))
                 .clientSecret(dotenv.get("GOOGLE_CLIENT_SECRET"))
@@ -55,7 +57,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .authorizationGrantType(
                         org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
                 .build();
-
+        // kakao
         ClientRegistration kakaoRegistration = ClientRegistration.withRegistrationId("kakao")
                 .clientId(dotenv.get("KAKAO_CLIENT_ID"))
                 // .clientSecret(dotenv.get("KAKAO_CLIENT_SECRET"))
@@ -69,7 +71,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .build();
 
-        return new InMemoryClientRegistrationRepository(googleRegistration);
+
+        return new InMemoryClientRegistrationRepository(googleRegistration, kakaoRegistration);
     }
 
     @Override
@@ -100,7 +103,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throw new OAuth2AuthenticationException("카카오에서 email 정보를 받아오지 못했습니다.");
         }
 
+
         String cleanName = cleanUserName(name);
+
 
         Users user = usersRepository.findByEmail(email).orElse(null);
 

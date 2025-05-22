@@ -34,7 +34,7 @@ public class JwtLoginController {
             return ResponseEntity.ok(Map.of("token", token));
         }
         catch (AuthenticationException e){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"error\": \"로그인 실패\"}"); 
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"error\": \"로그인 실패\"}");
         }
     }
 }
