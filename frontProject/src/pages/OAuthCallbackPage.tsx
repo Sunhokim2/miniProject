@@ -9,44 +9,35 @@ const OAuthCallbackPage = () => {
   const { setAuth, isAuthenticated, user } = useAuth();
 
   useEffect(() => {
-    const handleAuth = async () => {
-      const token = searchParams.get('token');
-      const email = searchParams.get('email');
-      const name = searchParams.get('name');
+    const token = searchParams.get('token');
+    const email = searchParams.get('email');
+    const name = searchParams.get('name');
 
-      if (!token || !email) {
-        console.error('Token or email not found');
-        navigate('/login');
-        return;
-      }
+    if (!token || !email) {
+      console.error('Token or email not found');
+      navigate('/login');
+      return;
+    }
 
-      // 이미 인증된 상태라면 setAuth를 다시 호출하지 않음
-      if (isAuthenticated && user && user.email === email) {
-        navigate('/');  // 루트 경로로 리다이렉트
-        return;
-      }
+    // 이미 인증된 상태라면 setAuth를 다시 호출하지 않음
+    if (isAuthenticated && user && user.email === email) {
+      navigate('/map');  // 메인 페이지로 리다이렉트
+      return;
+    }
 
-      try {
-        // 로컬 스토리지에 토큰 저장
-        localStorage.setItem('token', token);
+    // 로컬 스토리지에 토큰 저장
+    localStorage.setItem('token', token);
 
-        // 인증 상태 업데이트
-        await setAuth({
-          token,
-          email,
-          name: name || email.split('@')[0],
-          isAuthenticated: true
-        });
+    // 인증 상태 업데이트
+    setAuth({
+      token,
+      email,
+      name: name || email.split('@')[0],
+      isAuthenticated: true
+    });
 
-        // 루트 경로로 리다이렉트
-        navigate('/');
-      } catch (error) {
-        console.error('인증 처리 중 오류 발생:', error);
-        navigate('/login');
-      }
-    };
-
-    handleAuth();
+    // 메인 페이지로 리다이렉트
+    navigate('/map');  // 메인 페이지로 리다이렉트
   }, [searchParams, navigate, setAuth, isAuthenticated, user]);
 
   return (

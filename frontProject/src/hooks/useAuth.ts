@@ -10,7 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   signup: (username: string, email: string, password: string, verificationCode: string) => Promise<{ success: boolean }>;
-  setAuth: (auth: { token: string; email: string; name?: string; isAuthenticated: boolean }) => Promise<void>;
+  setAuth: (auth: { token: string; email: string; name?: string; isAuthenticated: boolean }) => void;
 }
 
 interface AuthProviderProps {
@@ -21,33 +21,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { user, isAuthenticated, isLoading, error, loginStart, loginSuccess, loginFailure, logout: storeLogout } = useAuthStore();
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const savedToken = localStorage.getItem('token');
-      if (savedToken) {
-        try {
-          await fetchUserInfo();
-        } catch (err) {
-          console.error('초기 인증 실패:', err);
-          localStorage.removeItem('token');
-          storeLogout();
-        }
-      }
-      setIsInitialized(true);
-    };
-
-    initializeAuth();
+    // 로컬 스토리지에서 토큰만 로드
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+      // 토큰이 있으면 사용자 정보를 서버에서 가져옴
+      fetchUserInfo();
+    }
   }, []);
 
   const fetchUserInfo = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('토큰이 없습니다.');
-      }
-
       const response = await fetch('http://localhost:8080/api/auth/me', {
         credentials: 'include',
         headers: {
@@ -70,11 +56,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         created_at: data.createdAt,
       };
 
-      loginSuccess(userData, token);
-      return true;
+      loginSuccess(userData, localStorage.getItem('token') || '');
     } catch (err) {
       console.error('사용자 정보 조회 실패:', err);
-      throw err;
     }
   };
 
@@ -178,51 +162,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const setAuth = async (auth: { token: string; email: string; name?: string; isAuthenticated: boolean }) => {
-    try {
-      // 서버에서 사용자 정보 가져오기
-      const response = await fetch('http://localhost:8080/api/auth/me', {
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${auth.token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('사용자 정보를 가져오는데 실패했습니다.');
-      }
-
-      const data = await response.json();
-      const userData: User = {
-        id: data.id,
-        user_name: data.userName,
-        email: data.email,
-        email_verified: data.emailVerified,
-        role: data.role,
-        created_at: data.createdAt,
-      };
-
-      loginSuccess(userData, auth.token);
-    } catch (err) {
-      console.error('사용자 정보 조회 실패:', err);
-      // 임시 사용자 정보로 대체
-      const userData: User = {
-        id: 0,
-        user_name: auth.name || auth.email.split('@')[0],
-        email: auth.email,
-        email_verified: true,
-        role: 'USER',
-        created_at: new Date().toISOString()
-      };
-      loginSuccess(userData, auth.token);
-    }
+  const setAuth = (auth: { token: string; email: string; name?: string; isAuthenticated: boolean }) => {
+    const userData: User = {
+      id: 0, // 임시 ID
+      user_name: auth.name || auth.email.split('@')[0], // 구글에서 받은 이름 또는 이메일에서 추출
+      email: auth.email,
+      email_verified: true,
+      role: 'USER',
+      created_at: new Date().toISOString()
+    };
+    loginSuccess(userData, auth.token);
   };
 
   const value: AuthContextType = {
     user,
     isAuthenticated,
-    isLoading: isLoading || !isInitialized,
+    isLoading,
     error,
     login,
     logout,
