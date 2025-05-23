@@ -6,6 +6,7 @@ export interface User {
   email_verified: boolean;
   role: string;
   created_at: string;
+  picture?: string; // 구글 프로필 이미지 URL
 }
 
 export interface AuthState {

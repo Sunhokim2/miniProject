@@ -239,16 +239,16 @@ docker run -d -p 80:80 front-nginx
 
 # Kakao OAuth
 VITE_KAKAO_CLIENT_ID=your_kakao_client_id
-VITE_KAKAO_REDIRECT_URI=http://localhost:5173/oauth/callback/kakao
+VITE_KAKAO_REDIRECT_URI=http://localhost:5713/oauth/callback/kakao
 
 # Google OAuth
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
-VITE_GOOGLE_REDIRECT_URI=http://localhost:5173/oauth/callback/google
+VITE_GOOGLE_REDIRECT_URI=http://localhost:5713/oauth/callback/google
 
 # Apple OAuth
 VITE_APPLE_CLIENT_ID=your_apple_client_id
-VITE_APPLE_REDIRECT_URI=http://localhost:5173/oauth/callback/apple 
+VITE_APPLE_REDIRECT_URI=http://localhost:5713/oauth/callback/apple 
 
 # Naver OPEN API
-VITE_NAVER_CLIENT_ID= =your_naver_client_id
+VITE_NAVER_CLIENT_ID=your_naver_client_id
 

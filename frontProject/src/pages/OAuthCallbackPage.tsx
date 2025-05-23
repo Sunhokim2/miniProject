@@ -1,39 +1,58 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { handleOAuthCallback } from '../utils/oauth';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const OAuthCallbackPage = () => {
   const [searchParams] = useSearchParams();
+  const { provider } = useParams();
   const navigate = useNavigate();
+  const { setAuth, isAuthenticated, user } = useAuth();
 
   useEffect(() => {
-    const handleCallback = async () => {
-      const code = searchParams.get('code');
-      const provider = window.location.pathname.split('/').pop() as 'kakao' | 'google' | 'apple';
+    const handleAuth = async () => {
+      const token = searchParams.get('token');
+      const email = searchParams.get('email');
+      const name = searchParams.get('name');
 
-      if (!code) {
-        console.error('Authorization code not found');
+      if (!token || !email) {
+        console.error('Token or email not found');
         navigate('/login');
         return;
       }
 
+      // 이미 인증된 상태라면 setAuth를 다시 호출하지 않음
+      if (isAuthenticated && user && user.email === email) {
+        navigate('/');  // 루트 경로로 리다이렉트
+        return;
+      }
+
       try {
-        const data = await handleOAuthCallback(provider, code);
-        // TODO: 토큰 저장 및 사용자 정보 처리
+        // 로컬 스토리지에 토큰 저장
+        localStorage.setItem('token', token);
+
+        // 인증 상태 업데이트
+        await setAuth({
+          token,
+          email,
+          name: name || email.split('@')[0],
+          isAuthenticated: true
+        });
+
+        // 루트 경로로 리다이렉트
         navigate('/');
       } catch (error) {
-        console.error('OAuth callback error:', error);
+        console.error('인증 처리 중 오류 발생:', error);
         navigate('/login');
       }
     };
 
-    handleCallback();
-  }, [searchParams, navigate]);
+    handleAuth();
+  }, [searchParams, navigate, setAuth, isAuthenticated, user]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-4">로그인 처리 중...</h2>
+        <h2 className="text-2xl font-bold mb-4">로그인 처리 중... ({provider})</h2>
         <p className="text-gray-600">잠시만 기다려주세요.</p>
       </div>
     </div>

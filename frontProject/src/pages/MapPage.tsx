@@ -59,50 +59,60 @@ const MapPage = () => {
   useEffect(() => {
     if (!mapRef.current || !window.naver) return;
 
-    const mapOptions = {
-      center: new window.naver.maps.LatLng(mapCenter.latitude, mapCenter.longitude),
-      zoom: 14,
-      zoomControl: false,
-    };
-
-    const map = new window.naver.maps.Map(mapRef.current, mapOptions);
-    naverMapRef.current = map;
-
-    // 현재 위치 가져오기
-    if (navigator.geolocation) {
-      const options = {
-        enableHighAccuracy: true, // 높은 정확도
-        timeout: 5000, // 5초 타임아웃
-        maximumAge: 0 // 캐시된 위치 정보 사용하지 않음
+    try {
+      const mapOptions = {
+        center: new window.naver.maps.LatLng(mapCenter.latitude, mapCenter.longitude),
+        zoom: 14,
+        zoomControl: false,
+        mapDataControl: false,
+        scaleControl: false,
+        logoControl: false,
+        mapTypeControl: false,
+        streetLayerControl: false
       };
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const newCenter = new window.naver.maps.LatLng(latitude, longitude);
-          map.setCenter(newCenter);
-          setMapCenter({ latitude, longitude });
-        },
-        (error) => {
-          console.error('Error getting current position:', error);
-          let errorMessage = '위치 정보를 가져오는데 실패했습니다.';
-          
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = '위치 정보 접근 권한이 거부되었습니다.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = '위치 정보를 사용할 수 없습니다.';
-              break;
-            case error.TIMEOUT:
-              errorMessage = '위치 정보 요청 시간이 초과되었습니다.';
-              break;
-          }
-          
-          alert(errorMessage);
-        },
-        options
-      );
+      const map = new window.naver.maps.Map(mapRef.current, mapOptions);
+      naverMapRef.current = map;
+
+      // 현재 위치 가져오기
+      if (navigator.geolocation) {
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        };
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const newCenter = new window.naver.maps.LatLng(latitude, longitude);
+            map.setCenter(newCenter);
+            setMapCenter({ latitude, longitude });
+          },
+          (error) => {
+            console.error('Error getting current position:', error);
+            let errorMessage = '위치 정보를 가져오는데 실패했습니다.';
+            
+            switch(error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = '위치 정보 접근 권한이 거부되었습니다.';
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = '위치 정보를 사용할 수 없습니다.';
+                break;
+              case error.TIMEOUT:
+                errorMessage = '위치 정보 요청 시간이 초과되었습니다.';
+                break;
+            }
+            
+            alert(errorMessage);
+          },
+          options
+        );
+      }
+    } catch (error) {
+      console.error('네이버 지도 초기화 실패:', error);
+      alert('지도를 불러오는데 실패했습니다. 네트워크 연결과 API 키를 확인해주세요.');
     }
 
     return () => {

@@ -6,10 +6,7 @@
     <meta name="description" content="맛집 기록 및 공유 웹 애플리케이션" />
     <meta name="theme-color" content="#4f46e5" />
     <title>MATZIP - 나만의 맛집 지도</title>
-    <script type="text/javascript">
-      window.NAVER_CLIENT_ID = "%VITE_NAVER_CLIENT_ID%";
-    </script>
-    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=%VITE_NAVER_CLIENT_ID%"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=%VITE_NAVER_CLIENT_ID%&submodules=geocoder"></script>
   </head>
   <body>
     <div id="root"></div>

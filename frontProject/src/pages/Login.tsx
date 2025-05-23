@@ -29,11 +29,11 @@ const Login: React.FC = () => {
     });
 
     const handleKakaoLogin = (): void => {
-        window.location.href = "http://localhost:8080/oauth2/authorization/kakao";
+        window.location.href = getKakaoLoginUrl();
     };
 
     const handleGoogleLogin = (): void => {
-        window.location.href = "http://localhost:8080/oauth2/authorization/google";
+        window.location.href = getGoogleLoginUrl();
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
