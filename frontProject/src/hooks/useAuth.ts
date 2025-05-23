@@ -86,8 +86,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error('인증 토큰이 없습니다');
       }
       
+      // 백엔드 응답을 User 타입에 맞게 변환
+      const userData: User = {
+        id: data.id,
+        user_name: data.userName,
+        email: data.email,
+        email_verified: data.emailVerified,
+        role: data.role,
+        created_at: data.createdAt || new Date().toISOString(),
+      };
+      
       // 스토어에 사용자 정보와 토큰 저장
-      loginSuccess(data, data.token);
+      loginSuccess(userData, data.token);
       
       // localStorage에는 토큰만 저장 (인증 유지용)
       localStorage.setItem('token', data.token);

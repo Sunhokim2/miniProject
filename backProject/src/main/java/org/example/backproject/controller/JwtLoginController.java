@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backproject.entity.Users;
 
 @Slf4j
 @RestController
@@ -37,18 +38,28 @@ public class JwtLoginController {
                 new UsernamePasswordAuthenticationToken(body.get("username"), body.get("password"))
             );
             String token = jwtUtil.createToken(authentication.getName());
-            var user = usersService.loadUserByUsername(authentication.getName());
-            System.out.println("user: " + user);
+            
+            // 실제 Users 엔티티를 가져옵니다.
+            String email = authentication.getName();
+            Users userEntity = usersService.findByEmail(email);
+            
+            if (userEntity == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "사용자 정보를 찾을 수 없습니다."));
+            }
+            
+            var user = usersService.loadUserByUsername(email);
+            
             log.info("token: {}", token);
-            log.info("authentication.getName(): {}", authentication.getName());
-            log.info("body.get(\"username\"): {}", body.get("username"));
-            log.info("user.getUsername(): {}", user.getUsername());
+            log.info("authentication.getName(): {}", email);
+            log.info("userEntity.getUserName(): {}", userEntity.getUserName());
             
             Map<String, Object> result = new HashMap<>();
             result.put("token", token);
-            result.put("id", authentication.getName() != null ? authentication.getName() : "");
-            result.put("email", body.get("username") != null ? body.get("username") : "");
-            result.put("userName", user.getUsername() != null ? user.getUsername() : "");
+            result.put("id", userEntity.getId());  // 숫자 ID 사용
+            result.put("email", email);
+            result.put("userName", userEntity.getUserName());  // DB에서 가져온 실제 사용자 이름
+            result.put("role", userEntity.getRole());
+            result.put("emailVerified", userEntity.getEmailVerified());
             
             log.info("Final result map: {}", result);
             
