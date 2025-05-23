@@ -137,4 +137,24 @@ public class NaverSearchService {
             return "{\"error\":\"API 응답 본문 읽기 실패: " + e.getMessage() + "\"}";
         }
     }
+
+    public String searchImgUrl(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            log.warn("검색어가 비어있습니다.");
+            return "{\"error\":\"검색어를 입력해주세요.\"}";
+        }
+        String encodedQuery;
+        encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+
+        String apiUrl = "https://openapi.naver.com/v1/search/image?query="
+                +encodedQuery+"&display=1";
+
+        // 요청 헤더 설정
+        Map<String, String> requestHeaders = new HashMap<>();
+        requestHeaders.put("X-Naver-Client-Id", naverClientId);
+        requestHeaders.put("X-Naver-Client-Secret", naverClientSecret);
+
+        // API 호출 실행
+        return executeGetRequest(apiUrl, requestHeaders);
+    }
 }

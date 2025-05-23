@@ -4,6 +4,7 @@ import { useState } from 'react';
 interface SearchResult {
   id: number;
   restaurant_name: string;
+  imageUrl: string;
   address: string;
   region: string;
   body: string;
@@ -24,6 +25,12 @@ const Search = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    const storedUser = localStorage.getItem('auth-storage'); // 로그인 시 저장한 키 사용
+    const authDataObject = JSON.parse(storedUser);
+    const extractedId = authDataObject?.state?.user?.id;
+    console.log(extractedId);
+
+
     const keyword = (
       e.currentTarget.elements.namedItem("searchInput") as HTMLInputElement
     ).value;
@@ -36,7 +43,8 @@ const Search = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ query: keyword }),
+        body: JSON.stringify({ query: keyword
+        , user_id: extractedId}),
       });
 
       if (!res.ok) {
@@ -81,6 +89,7 @@ const Search = () => {
         <div className="w-full max-w-[800px] space-y-4">
           {searchResults.map((result) => (
             <div key={result.id} className="bg-white rounded-lg shadow-md p-6">
+              <img src={result.imageUrl} alt="pic1" />
               <h2 className="text-xl font-bold mb-2">{result.restaurant_name}</h2>
               <div className="text-gray-600 mb-2">
                 <p>주소: {result.address}</p>
