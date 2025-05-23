@@ -2,12 +2,24 @@ package org.example.backproject.repository;
 
 import org.example.backproject.entity.Restaurants;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface RestaurantsRepository extends JpaRepository<Restaurants, Long> {
     boolean existsByAddress(String address);
     Optional<Restaurants> findByAddress(String address);
+
+    @Query(value = "SELECT * FROM restaurant_info WHERE " +
+           "ST_Distance_Sphere(point(longitude, latitude), point(:longitude, :latitude)) <= :distance * 1000", 
+           nativeQuery = true)
+    List<Restaurants> findNearbyRestaurants(
+        @Param("latitude") String latitude,
+        @Param("longitude") String longitude,
+        @Param("distance") double distance
+    );
 }

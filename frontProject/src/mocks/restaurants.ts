@@ -1,5 +1,6 @@
 export interface Restaurant {
   id: number;
+  restaurant_name: string;
   restaurant: string;
   category: string;
   region: string;
@@ -18,6 +19,7 @@ export interface Restaurant {
 export const restaurants: Restaurant[] = [
   {
     id: 1,
+    restaurant_name: "맛있는 돈까스",
     restaurant: "맛있는 돈까스",
     category: "일식",
     region: "강남구",
@@ -34,6 +36,7 @@ export const restaurants: Restaurant[] = [
   },
   {
     id: 2,
+    restaurant_name: "신선한 초밥",
     restaurant: "신선한 초밥",
     category: "일식",
     region: "강남구",

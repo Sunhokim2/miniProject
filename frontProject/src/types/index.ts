@@ -24,21 +24,18 @@ export interface AuthState {
 // 레스토랑 관련 타입
 export interface Restaurant {
   id: number;
-  restaurantId?: number;  // 북마크에서 사용하는 원본 레스토랑 ID
-  restaurant: string;
+  restaurant_name: string;
+  address: string;
   category: string;
   region: string;
-  main_menu: string[];
-  address: string;
+  mainMenu: string[];
   body: string;
-  latitude: number;
-  longitude: number;
   rate: number;
+  latitude: string;
+  longitude: string;
+  status: boolean;
   source: string;
-  status: string;
-  bookmarked?: boolean;
-  imageUrl: string;
-  description: string;
+  imageUrl: string | null;
 }
 
 // 포스트 관련 타입
