@@ -18,9 +18,8 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import Search from './pages/Search';
 
-import Login from '@/pages/Login';
-import Signup from '@/pages/Signup';
 import LoginLanding from '@/pages/LoginLanding';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -49,8 +48,8 @@ function App() {
       <Routes>
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           <Route path="/login-landing" element={<LoginLanding />} />
         </Route>
         

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -9,15 +9,19 @@ import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import { KakaoIcon, AppleIcon } from '@/components/common/SocialIcons';
+import EmailVerification from '@/components/EmailVerification';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [showError, setShowError] = useState(false);
-  const { signup, isLoading, error } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const { signup, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   const validatePassword = () => {
     if (password !== confirmPassword) {
@@ -36,7 +40,9 @@ const SignupPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !email || !password || !confirmPassword) {
+    if (!username || !email || !password || !confirmPassword || !verificationCode) {
+      setShowError(true);
+      setError('모든 필드를 입력해주세요.');
       return;
     }
     
@@ -44,9 +50,18 @@ const SignupPage = () => {
       return;
     }
     
-    const result = await signup(username, email, password);
-    if (!result.success) {
+    try {
+      const result = await signup(username, email, password, verificationCode);
+      if (result.success) {
+        // 회원가입 성공 시 로그인 페이지로 이동
+        navigate('/login', { replace: true });
+      } else {
+        setShowError(true);
+        setError('회원가입에 실패했습니다.');
+      }
+    } catch (err) {
       setShowError(true);
+      setError(err instanceof Error ? err.message : '회원가입 중 오류가 발생했습니다.');
     }
   };
 
@@ -99,6 +114,21 @@ const SignupPage = () => {
             required
             InputProps={{
               startAdornment: <EmailIcon className="mr-2 text-gray-500" />,
+              endAdornment: <EmailVerification email={email} />
+            }}
+          />
+        </div>
+
+        <div>
+          <TextField
+            fullWidth
+            label="이메일 인증코드"
+            type="text"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            required
+            InputProps={{
+              startAdornment: <EmailIcon className="mr-2 text-gray-500" />,
             }}
           />
         </div>
@@ -148,7 +178,7 @@ const SignupPage = () => {
         </div>
       </form>
       
-      <div className="mt-8">
+      <div className="mt-6">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
@@ -170,6 +200,7 @@ const SignupPage = () => {
             </svg>
             <span className="text-sm">카카오로 가입</span>
           </button>
+          
           <button
             type="button"
             className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-gray-700 hover:bg-gray-50"

@@ -1,6 +1,7 @@
 package org.example.backproject.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.example.backproject.dto.GptSummaryDto;
@@ -53,13 +54,16 @@ public class SearchBackController {
     @Autowired
     private PostsRepository postsRepository;
 
+    String imageGo = "image";
+
     // 루트 경로 및 검색 실행 경로 모두 이 메소드가 처리
     @PostMapping("/api/search")
     @Transactional
     public ResponseEntity<?> searchRestaurants(
-            @RequestBody SearchRequestDto searchRequest) {
+            @RequestBody SearchRequestDto searchRequest){
 
         String query = searchRequest.getQuery(); // DTO에서 query 추출
+        Long userId = searchRequest.getUser_id();
 
         if (query == null || query.trim().isEmpty()) {
             log.warn("Search query is missing or empty in request body.");
@@ -69,10 +73,38 @@ public class SearchBackController {
         }
 
         String rawJsonResponseFromNaver = naverSearchService.search(query);
+        String rawImageResponse = naverSearchService.searchImgUrl(query);
+
+
         List<Restaurants> restaurantEntities; // 처리된 식당 엔티티 리스트
 
+
+
         try {
+            Map<String, Object> imageResponse = objectMapper.readValue(rawImageResponse,new TypeReference<Map<String, Object>>() {});
             NaverApiResponse apiResponse = objectMapper.readValue(rawJsonResponseFromNaver, NaverApiResponse.class);
+
+
+
+
+            if (imageResponse != null && imageResponse.containsKey("items")) {
+                Object itemsObject = imageResponse.get("items");
+                if (itemsObject instanceof List) {
+                    List<?> itemsRawList = (List<?>) itemsObject; // 일단 List<?>로 받음
+                    if (!itemsRawList.isEmpty()) {
+                        Object firstItemObject = itemsRawList.get(0);
+                        if (firstItemObject instanceof Map) {
+                            Map<String, Object> firstItemMap = (Map<String, Object>) firstItemObject; // 첫 번째 아이템을 Map으로 변환
+                            if (firstItemMap.containsKey("thumbnail")) {
+                                imageGo = (String) firstItemMap.get("thumbnail"); // "thumbnail" 키로 이미지 URL 가져오기
+                                log.info("이미지 URL (from Map): {}", imageGo);
+                            }
+                        }
+                    }
+                }
+            }
+
+
 
             List<NaverBlogItem> items = (apiResponse != null && apiResponse.getItems() != null)
                     ? apiResponse.getItems()
@@ -110,9 +142,12 @@ public class SearchBackController {
                     .map(entry -> {
                         String blogLink = entry.getKey();
                         String blogContent = entry.getValue();
+
                         try {
                             String gptSummaryJsonString = gptApiService.summarizeBlog(blogContent);
                             String pureJsonString = gptSummaryJsonString.replace("```json\n", "").replace("\n```", "");
+
+
 
                             if (pureJsonString.trim().isEmpty()) {
                                 log.warn("GPT summary JSON string is empty for blog link: {}", blogLink);
@@ -142,6 +177,9 @@ public class SearchBackController {
                                 newRestaurant.setRate(summaryDto.getRate());
                                 newRestaurant.setSource(blogLink);
                                 newRestaurant.setStatus(true);
+
+                                newRestaurant.setImageUrl(imageGo);
+
 
                                 try {
                                     List<String> geoList = naverGeoCodingService.getCoordinates(summaryDto.getAddress());
@@ -185,7 +223,7 @@ public class SearchBackController {
             }
 //            2. 만약 posts DB 비어있다면 DB적재
             if (postsRepository.findByUserIdAndRestaurantName(currentUserId, restaurantEntities.get(0).getRestaurant_name()).isEmpty()) {
-                searchAndPostService.CreatePosts(restaurantEntities, currentUserId);
+                searchAndPostService.CreatePosts(restaurantEntities, userId);
             }
 
 //            레스토랑 리스트를 리턴(현재는 1개 요소)

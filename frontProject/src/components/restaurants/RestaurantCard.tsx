@@ -46,10 +46,13 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
   const handleToggleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
     
+    // restaurant.id 또는 restaurant.restaurantId 중 존재하는 값을 사용
+    const restaurantId = restaurant.restaurantId || restaurant.id;
+    
     if (isBookmarked) {
-      removeBookmarkMutation.mutate(restaurant.id);
+      removeBookmarkMutation.mutate(restaurantId);
     } else {
-      addBookmarkMutation.mutate(restaurant.id);
+      addBookmarkMutation.mutate(restaurantId);
     }
     
     setIsBookmarked(!isBookmarked);

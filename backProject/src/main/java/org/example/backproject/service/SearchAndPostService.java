@@ -62,6 +62,7 @@ public class SearchAndPostService {
                 newPost.setLatitude(restaurant.getLatitude());
                 newPost.setLongitude(restaurant.getLongitude());
                 newPost.setRestaurantName(restaurant.getRestaurant_name());
+                newPost.setImageUrl(restaurant.getImageUrl());
 
                 postsRepository.save(newPost);
                 log.info("Saved post for user_id: {} and restaurant_id: {}", userId, restaurant.getId());

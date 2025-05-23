@@ -42,4 +42,9 @@ public class UsersService implements UserDetailsService {
     public void deleteByEmail(String email){
         usersRepository.deleteByEmail(email);
     }
+
+    public Users findByEmail(String email) {
+        return usersRepository.findByEmail(email)
+            .orElse(null);
+    }
 }

@@ -14,15 +14,20 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  loginStart: () => void;
+  loginSuccess: (user: User, token: string) => void;
+  loginFailure: (error: string) => void;
+  logout: () => void;
 }
 
 // 레스토랑 관련 타입
 export interface Restaurant {
   id: number;
+  restaurantId?: number;  // 북마크에서 사용하는 원본 레스토랑 ID
   restaurant: string;
   category: string;
   region: string;
-  main_menu: string;
+  main_menu: string[];
   address: string;
   body: string;
   latitude: number;
@@ -31,6 +36,8 @@ export interface Restaurant {
   source: string;
   status: string;
   bookmarked?: boolean;
+  imageUrl: string;
+  description: string;
 }
 
 // 포스트 관련 타입

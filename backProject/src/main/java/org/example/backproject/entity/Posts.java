@@ -25,7 +25,8 @@ public class Posts {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-
+    //    이미지
+    private String imageUrl;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "restaurant_id")

@@ -1,14 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface User {
-  id: number;
-  user_name: string;
-  email: string;
-  password: string;
-  email_verified: boolean;
-  role: string;
-  created_at: string;
-}
+import useAuthStore from '@/store/useAuthStore';
+import { User, AuthState } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -16,95 +8,162 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  signup: (email: string, password: string, user_name: string) => Promise<void>;
+  logout: () => void;
+  signup: (username: string, email: string, password: string, verificationCode: string) => Promise<{ success: boolean }>;
 }
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Mock 데이터
-const mockUser: User = {
-  id: 1,
-  user_name: '테스트 사용자',
-  email: 'test@example.com',
-  password: 'hashed_password',
-  email_verified: true,
-  role: 'USER',
-  created_at: new Date().toISOString()
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user, isAuthenticated, isLoading, error, loginStart, loginSuccess, loginFailure, logout: storeLogout } = useAuthStore();
 
   useEffect(() => {
-    // Mock 데이터 사용 여부를 환경 변수로 제어
-    // if (import.meta.env.VITE_USE_MOCK_DATA) {
-    //   setUser(mockUser);
-    // }
-    setIsLoading(false);
+    // 로컬 스토리지에서 토큰만 로드
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+      // 토큰이 있으면 사용자 정보를 서버에서 가져옴
+      fetchUserInfo();
+    }
   }, []);
+
+  const fetchUserInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8080/api/auth/me', {
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('사용자 정보를 가져오는데 실패했습니다.');
+      }
+
+      const data = await response.json();
+      const userData: User = {
+        id: data.id,
+        user_name: data.userName,
+        email: data.email,
+        email_verified: data.emailVerified,
+        role: data.role,
+        created_at: data.createdAt,
+      };
+
+      loginSuccess(userData, localStorage.getItem('token') || '');
+    } catch (err) {
+      console.error('사용자 정보 조회 실패:', err);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      setError(null);
+      loginStart(); // 로그인 시작 상태 설정
       
-      // Mock 데이터 사용 여부를 환경 변수로 제어
-      // if (import.meta.env.VITE_USE_MOCK_DATA) {
-      //   console.log('Mock 데이터 사용: Mockup 사용자로 로그인');
-      //   setUser(mockUser);
-      //   return;
-      // }
+      const response = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username: email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error('로그인 실패');
+      }
+
+      const data = await response.json();
+      console.log('Login response:', data);
       
-      // TODO: 실제 API 호출로 대체
-      throw new Error('API가 구현되지 않았습니다.');
+      if (!data.token) {
+        console.error('로그인 응답에 토큰이 없습니다:', data);
+        throw new Error('인증 토큰이 없습니다');
+      }
+      
+      // 백엔드 응답을 User 타입에 맞게 변환
+      const userData: User = {
+        id: data.id,
+        user_name: data.userName,
+        email: data.email,
+        email_verified: data.emailVerified,
+        role: data.role,
+        created_at: data.createdAt || new Date().toISOString(),
+      };
+      
+      // 스토어에 사용자 정보와 토큰 저장
+      loginSuccess(userData, data.token);
+      
+      // localStorage에는 토큰만 저장 (인증 유지용)
+      localStorage.setItem('token', data.token);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.');
+      console.error('Login error:', err);
+      loginFailure(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const logout = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      // TODO: 실제 API 호출로 대체
-      setUser(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '로그아웃 중 오류가 발생했습니다.');
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
+  const logout = () => {
+    storeLogout();
+    localStorage.removeItem('token');
   };
 
-  const signup = async (email: string, password: string, user_name: string) => {
+  const signup = async (username: string, email: string, password: string, verificationCode: string) => {
     try {
-      setIsLoading(true);
-      setError(null);
-      // TODO: 실제 API 호출로 대체
-      // if (import.meta.env.VITE_USE_MOCK_DATA) {
-      //   setUser(mockUser);
-      // }
+      loginStart();
+
+      const response = await fetch('http://localhost:8080/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userName: username,
+          email: email,
+          password: password,
+          code: verificationCode
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || '회원가입에 실패했습니다.');
+      }
+
+      // 회원가입 성공 시 사용자 정보 저장
+      const userData: User = {
+        id: data.id,
+        user_name: data.userName,
+        email: data.email,
+        email_verified: data.emailVerified,
+        role: data.role,
+        created_at: data.createdAt,
+      };
+      
+      // 스토어에만 정보 저장
+      loginSuccess(userData, data.token);
+      
+      // localStorage에는 토큰만 저장 (인증 유지용)
+      localStorage.setItem('token', data.token);
+      
+      console.log('회원가입 성공:', userData.email);
+
+      return { success: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : '회원가입 중 오류가 발생했습니다.');
-      throw err;
-    } finally {
-      setIsLoading(false);
+      loginFailure(err instanceof Error ? err.message : '회원가입 중 오류가 발생했습니다.');
+      return { success: false };
     }
   };
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated,
     isLoading,
     error,
     login,
