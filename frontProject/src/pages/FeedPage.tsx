@@ -2,73 +2,74 @@ import { useEffect, useState } from "react";
 import "../css/Pages.css";
 import rawRegionColors from "./korea_regions_colors.json";
 import categoryColors from "./category_colors.json";
-import DetailedPage from "./DetailedPage"
+import DetailedPage from "./DetailedPage";
 
 const FeedPage = () => {
-interface Place {
-  id: number;
-  imageUrl: string;
-  restaurant_name: string;
-  category: string;
-  region: string;
-  mainMenu: string[];
-  description: string;
-  address: string;
-  body: string;
-  latitude: number;
-  longitude: number;
-  rate: number;
-  source: string;
-  status: string;
-  bookmarked: boolean;
-  visited: boolean;
-  map_url: string;
-  created_at: string;
-  user_posts: {
-    user_name: string;
-    created_at: string;
+  interface Place {
+    id: number;
+    imageUrl: string;
+    restaurant_name: string;
+    category: string;
+    region: string;
+    mainMenu: string[];
+    description: string;
+    address: string;
+    body: string;
     latitude: number;
     longitude: number;
-  }[];
-}
+    rate: number;
+    source: string;
+    status: string;
+    bookmarked: boolean;
+    visited: boolean;
+    map_url: string;
+    created_at: string;
+    user_posts: {
+      user_name: string;
+      created_at: string;
+      latitude: number;
+      longitude: number;
+    }[];
+  }
 
   // regionColors를 객체로 변환
-const regionColors = Object.fromEntries(
-  rawRegionColors.map(({ region, color }) => [region, color])
-);
+  const regionColors = Object.fromEntries(
+    rawRegionColors.map(({ region, color }) => [region, color])
+  );
 
   //dummy data
-  const placesData =[
+  const dummyplacesData = [
     {
-        id: 1,
-        imageUrl:
-          "https://cdn.imweb.me/upload/S2024013025a8a2a1c6644/13570ac6b056e.png",
-        restaurant_name: "능동미나리 여의도점",
-        category: "한식",
-        region: "서울시 영등포구",
-        mainMenu: ["미나리 수육 전골", "능동 육회비빔밥", "육전"],
-        address: "서울 영등포구 의사당대로 127 롯데캐슬 엠파이어빌딩 1층 107호",
-        body: "미나리가 듬뿍 들어간 수육전골과 육회비빔밥, 육전이 유명한 맛집. 술과 함께 즐기기 좋은 구성으로 여의도 직장인들의 저녁 술자리 성지로 떠오르는 중. 깔끔한 매장과 아기의자 구비, 테이블링 현장대기 시스템 운영. 국물이 점점 깊어지는 전골과 간장양념 육회비빔밥, 육전+비빔밥 조합이 환상적.",
-        description: "미나리 수육 전골과 육회비빔밥, 육전이 인기인 여의도 직장인들의 술자리 성지.",
-        latitude: 37.527265, // 여의도 롯데캐슬 엠파이어 좌표 (대략적)
-        longitude: 126.92465,
-        rate: 5,
-        source: "https://blog.naver.com/wlgus3651/223570456098",
-        status: "방문함",
-        bookmarked: false,
-        visited: false,
-        map_url: "https://maps.app.goo.gl/moQBvBbAcm33HXmK9",
-        created_at: "2024-09-03",
-        user_posts: [
-          {
-            user_name: "혀언",
-            created_at: "2024-09-03T11:05:00Z",
-            latitude: 37.527265,
-            longitude: 126.92465,
-          },
-        ],
-      },
-    
+      id: 1,
+      imageUrl:
+        "https://cdn.imweb.me/upload/S2024013025a8a2a1c6644/13570ac6b056e.png",
+      restaurant_name: "능동미나리 여의도점",
+      category: "한식",
+      region: "서울시 영등포구",
+      mainMenu: ["미나리 수육 전골", "능동 육회비빔밥", "육전"],
+      address: "서울 영등포구 의사당대로 127 롯데캐슬 엠파이어빌딩 1층 107호",
+      body: "미나리가 듬뿍 들어간 수육전골과 육회비빔밥, 육전이 유명한 맛집. 술과 함께 즐기기 좋은 구성으로 여의도 직장인들의 저녁 술자리 성지로 떠오르는 중. 깔끔한 매장과 아기의자 구비, 테이블링 현장대기 시스템 운영. 국물이 점점 깊어지는 전골과 간장양념 육회비빔밥, 육전+비빔밥 조합이 환상적.",
+      description:
+        "미나리 수육 전골과 육회비빔밥, 육전이 인기인 여의도 직장인들의 술자리 성지.",
+      latitude: 37.527265, // 여의도 롯데캐슬 엠파이어 좌표 (대략적)
+      longitude: 126.92465,
+      rate: 5,
+      source: "https://blog.naver.com/wlgus3651/223570456098",
+      status: "방문함",
+      bookmarked: false,
+      visited: false,
+      map_url: "https://maps.app.goo.gl/moQBvBbAcm33HXmK9",
+      created_at: "2024-09-03",
+      user_posts: [
+        {
+          user_name: "혀언",
+          created_at: "2024-09-03T11:05:00Z",
+          latitude: 37.527265,
+          longitude: 126.92465,
+        },
+      ],
+    },
+
     {
       id: 2,
       imageUrl:
@@ -100,9 +101,8 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 3,
-      imageUrl:
-        "https://img.siksinhot.com/place/1640215450796032.jpeg",
-        restaurant_name: "도넛정수 창신",
+      imageUrl: "https://img.siksinhot.com/place/1640215450796032.jpeg",
+      restaurant_name: "도넛정수 창신",
       category: "카페",
       region: "서울시 종로구",
       mainMenu: ["초코 바나나 도넛", "쑥 초코 도넛", "아메리카노"],
@@ -129,8 +129,9 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 4,
-      imageUrl: "https://blog.kakaocdn.net/dn/bfdTpz/btrDFKZBOKJ/QSI1BH8CfvFOjeuFqf7VQk/img.jpg",
-        restaurant_name: "핫쵸 성수",
+      imageUrl:
+        "https://blog.kakaocdn.net/dn/bfdTpz/btrDFKZBOKJ/QSI1BH8CfvFOjeuFqf7VQk/img.jpg",
+      restaurant_name: "핫쵸 성수",
       category: "일식",
       region: "서울시 성동구",
       mainMenu: ["히로시마 오코노미야끼", "명란 크림 돈페야끼", "야끼소바"],
@@ -157,12 +158,18 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 5,
-      imageUrl: "https://d12zq4w4guyljn.cloudfront.net/750_750_20240408075829_photo1_b0799598ca1c.webp",
-        restaurant_name: "와일드플라워 방배",
+      imageUrl:
+        "https://d12zq4w4guyljn.cloudfront.net/750_750_20240408075829_photo1_b0799598ca1c.webp",
+      restaurant_name: "와일드플라워 방배",
       category: "양식",
       region: "서울시 서초구",
-      mainMenu: ["트러플 들깨 궁채 파스타", "숨비소리 리조또", "레터링 서비스 디저트"],
-      description: "감성 가득한 방배동 레스토랑. 레터링 디저트 서비스로 기념일 추천.",
+      mainMenu: [
+        "트러플 들깨 궁채 파스타",
+        "숨비소리 리조또",
+        "레터링 서비스 디저트",
+      ],
+      description:
+        "감성 가득한 방배동 레스토랑. 레터링 디저트 서비스로 기념일 추천.",
       address: "서울 서초구 방배로 84 1층",
       body: "강남 서초 인근 방배동의 감성 레스토랑. 제철 재료를 활용한 창의적인 메뉴와 고급스러운 인테리어, 그리고 레터링 서비스로 유명한 곳. 트러플 들깨 궁채 파스타, 숨비소리 성게 리조또가 대표 메뉴. 레터링 서비스는 사전 예약 시 디저트에 원하는 문구를 무료로 제공하여 기념일에 딱. 직원들의 세심하고 빠른 응대와 넉넉한 좌석 간격 덕분에 데이트, 기념일, 가족 모임에도 적합.",
       latitude: 37.4845, // 대략적 위치 (방배로 84 근처)
@@ -185,12 +192,14 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 6,
-      imageUrl: "https://mblogthumb-phinf.pstatic.net/MjAyMzEwMTZfMTUw/MDAxNjk3NDIzMjM4MzQ3.8Noyj6gr_uhPryMvUJldWbYuT3TP0RfgQ3Ljvd9VJ88g.cM0se-jk5J8mDcBOGogmtpNVXUZ2QQOGf_zCm5uads4g.JPEG.flak4121/IMG_9041.jpg?type=w800",
+      imageUrl:
+        "https://mblogthumb-phinf.pstatic.net/MjAyMzEwMTZfMTUw/MDAxNjk3NDIzMjM4MzQ3.8Noyj6gr_uhPryMvUJldWbYuT3TP0RfgQ3Ljvd9VJ88g.cM0se-jk5J8mDcBOGogmtpNVXUZ2QQOGf_zCm5uads4g.JPEG.flak4121/IMG_9041.jpg?type=w800",
       restaurant_name: "카츠바이콘반 도산공원점",
       category: "일식",
       region: "서울시 강남구",
       mainMenu: ["상로스카츠", "미니 카레", "돈지루"],
-      description: "두툼한 특등심 돈카츠와 향신료 진한 카레가 인기인 도산공원 돈카츠 맛집.",
+      description:
+        "두툼한 특등심 돈카츠와 향신료 진한 카레가 인기인 도산공원 돈카츠 맛집.",
       address: "서울 강남구 선릉로153길 36 1층",
       body: "서울 도산공원 근처 압구정로데오역 인근의 돈카츠 맛집. 두툼한 특등심 로스카츠와 부드러운 돈지루, 그리고 향신료 강한 미니 카레가 인기. 대기 많은 곳으로 혼밥러에게도 추천. 다소 기름이 덜 빠진 튀김옷은 호불호 갈릴 수 있으나 밥과 카레는 수준급.",
       latitude: 37.52442,
@@ -213,7 +222,8 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 7,
-      imageUrl: "https://blog.kakaocdn.net/dn/B0jO4/btrSI9RAQ3k/Xwz65YNvR5zwOYbpNXx4p1/img.jpg",
+      imageUrl:
+        "https://blog.kakaocdn.net/dn/B0jO4/btrSI9RAQ3k/Xwz65YNvR5zwOYbpNXx4p1/img.jpg",
       restaurant_name: "그라데이션커피 성수",
       category: "카페",
       region: "서울시 성동구",
@@ -241,12 +251,14 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 8,
-      imageUrl: "https://img1.daumcdn.net/thumb/R1280x0/?fname=http://t1.daumcdn.net/brunch/service/user/3fy/image/OUgALVYv5pBILsEFofbmJsxevOw.jpg",
+      imageUrl:
+        "https://img1.daumcdn.net/thumb/R1280x0/?fname=http://t1.daumcdn.net/brunch/service/user/3fy/image/OUgALVYv5pBILsEFofbmJsxevOw.jpg",
       restaurant_name: "코끼리베이글 인사동",
       category: "카페",
       region: "서울시 종로구",
       mainMenu: ["버터 솔트 베이글", "아메리카노"],
-      description: "화덕에 구운 쫀득 담백한 베이글이 인기인 인사동 베이글 맛집.",
+      description:
+        "화덕에 구운 쫀득 담백한 베이글이 인기인 인사동 베이글 맛집.",
       address: "서울 종로구 인사동길 35-3",
       body: "인사동 베이글 전문점. 화덕에 구워 쫀득 담백한 베이글이 인기이며 서울 3대 베이글 맛집으로 불림. 다양한 베이글과 샌드위치 제공하며, 3층까지 여유로운 공간. 런던베이글보다 한산해 빠르게 즐기기 좋음.",
       latitude: 37.57253,
@@ -269,7 +281,8 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 9,
-      imageUrl: "https://mblogthumb-phinf.pstatic.net/MjAyMzA4MjlfMSAg/MDAxNjkzMjQ1NDY2Njkz.YsBR2X50Px7fiUmwMjstUXtvp5JU4_P5oFsjLior_gsg.oBFdNtq7P9V4D1OhJylZqQ7NenR8XG-SRZIeHvGYqDMg.JPEG.kimsy9591/IMG_8510.jpg?type=w800",
+      imageUrl:
+        "https://mblogthumb-phinf.pstatic.net/MjAyMzA4MjlfMSAg/MDAxNjkzMjQ1NDY2Njkz.YsBR2X50Px7fiUmwMjstUXtvp5JU4_P5oFsjLior_gsg.oBFdNtq7P9V4D1OhJylZqQ7NenR8XG-SRZIeHvGYqDMg.JPEG.kimsy9591/IMG_8510.jpg?type=w800",
       restaurant_name: "호수식당 문의",
       category: "한식",
       region: "청주시",
@@ -297,7 +310,8 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 10,
-      imageUrl: "https://img.siksinhot.com/place/1443970776790487.jpg?w=560&h=448&c=Y",
+      imageUrl:
+        "https://img.siksinhot.com/place/1443970776790487.jpg?w=560&h=448&c=Y",
       restaurant_name: "안성댁부대찌개 대전",
       category: "한식",
       region: "대전시 유성구",
@@ -325,12 +339,14 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 11,
-      imageUrl: "https://mblogthumb-phinf.pstatic.net/MjAyMzA0MjZfMTU5/MDAxNjgyNDM5MjU1MzQ1.R0DPhaxUT2BI9CQRNummin7J8cb5uQVCc17Z9I_m8Nkg.Q_i1hxJRVXmdXBPXlyipsGr7HH3x1OJJZVB54IqOrIQg.JPEG.queen7165/IMG_8597.jpg?type=w800",
+      imageUrl:
+        "https://mblogthumb-phinf.pstatic.net/MjAyMzA0MjZfMTU5/MDAxNjgyNDM5MjU1MzQ1.R0DPhaxUT2BI9CQRNummin7J8cb5uQVCc17Z9I_m8Nkg.Q_i1hxJRVXmdXBPXlyipsGr7HH3x1OJJZVB54IqOrIQg.JPEG.queen7165/IMG_8597.jpg?type=w800",
       restaurant_name: "프루 Fru",
       category: "술집",
       region: "서울시 종로구",
       mainMenu: ["모둠 사시미", "매콤 파스타", "참치 후토마키"],
-      description: "일본 감성의 다찌 이자카야. 사시미와 명란 계란말이가 인기이며 시티팝 분위기 물씬.",
+      description:
+        "일본 감성의 다찌 이자카야. 사시미와 명란 계란말이가 인기이며 시티팝 분위기 물씬.",
       address: "서울 종로구 북촌로5길 10",
       body: "안국역 근처에 위치한 일본 감성의 이자카야. 아담한 다찌바 스타일로 분위기와 음악이 독특하며 사시미와 명란치즈 계란말이가 인기. 시티팝 감성과 잘 어울리는 공간으로 웨이팅이 자주 발생하며 최대 2시간 30분 이용 가능.",
       latitude: 37.57994,
@@ -353,12 +369,14 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 12,
-      imageUrl: "https://design.co.kr/wp-content/uploads/2024/07/%EC%B0%A8%EC%B0%A8%EC%9D%B4%ED%85%8C_%EB%B3%B8%EC%B0%A8-%ED%8C%8C%EB%A5%B4%ED%8E%98-832x1109.jpg",
+      imageUrl:
+        "https://design.co.kr/wp-content/uploads/2024/07/%EC%B0%A8%EC%B0%A8%EC%9D%B4%ED%85%8C_%EB%B3%B8%EC%B0%A8-%ED%8C%8C%EB%A5%B4%ED%8E%98-832x1109.jpg",
       restaurant_name: "차차이테",
       category: "카페",
       region: "서울시 용산구",
       mainMenu: ["맞이차", "본차+과자", "밀크티+스콘"],
-      description: "차와 과자를 코스로 즐기는 한남동 예약제 티룸. 분위기 좋은 디저트 공간.",
+      description:
+        "차와 과자를 코스로 즐기는 한남동 예약제 티룸. 분위기 좋은 디저트 공간.",
       address: "서울 용산구 이태원로54길 74 2층",
       body: "한남동 티코스 전문점. 맞이차, 본차, 마무리차 구성으로 차와 디저트를 코스로 즐길 수 있는 예약제 티룸. 분위기 있는 공간과 정갈한 차과자 페어링으로 연인, 선물용 방문에 제격.",
       latitude: 37.53795,
@@ -381,12 +399,14 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 13,
-      imageUrl: "https://d12zq4w4guyljn.cloudfront.net/750_750_20250218121009125_photo_8de4c3974a4b.webp",
+      imageUrl:
+        "https://d12zq4w4guyljn.cloudfront.net/750_750_20250218121009125_photo_8de4c3974a4b.webp",
       restaurant_name: "금제",
       category: "일식",
       region: "서울시 관악구",
       mainMenu: ["특로스가츠", "히레가츠", "가츠산도"],
-      description: "저온 조리로 튀긴 프리미엄 로스가츠가 인기인 신림 돈카츠 맛집.",
+      description:
+        "저온 조리로 튀긴 프리미엄 로스가츠가 인기인 신림 돈카츠 맛집.",
       address: "서울 관악구 조원로 101 1층",
       body: "신림동 프리미엄 돈카츠 맛집. 저온조리한 가브리살 특로스가츠가 인기. 작고 조용한 바테이블형 일본식 식당으로, 혼밥이나 데이트 모두 가능. 트러플오일, 소금, 와사비와 함께 먹는 게 포인트.",
       latitude: 37.48132,
@@ -409,12 +429,14 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 14,
-      imageUrl: "https://dw82ptradz9jo.cloudfront.net/space/0DA35076-8B4C-4394-A735-FB2609655848/story/602a3043bf00be3ceaf9b90a/25ec3b91-168f-4de9-b341-b6cc89b27330",
+      imageUrl:
+        "https://dw82ptradz9jo.cloudfront.net/space/0DA35076-8B4C-4394-A735-FB2609655848/story/602a3043bf00be3ceaf9b90a/25ec3b91-168f-4de9-b341-b6cc89b27330",
       restaurant_name: "아우트로 커피",
       category: "카페",
       region: "청주시",
       mainMenu: ["아메리카노", "레몬소르베 음료", "베이커리"],
-      description: "청주 외곽 불멍 가능한 대형 카페. 감성 좌석과 사진 맛집으로 인기.",
+      description:
+        "청주 외곽 불멍 가능한 대형 카페. 감성 좌석과 사진 맛집으로 인기.",
       address: "충북 청주시 상당구 낭성면 산성로 676",
       body: "청주 외곽에 위치한 대형카페. 넓은 공간과 불멍 가능한 창가 좌석, 다양한 커피와 디저트가 인기. 산책 겸 나들이 장소로 적합하며 포토존이 많아 사진 찍는 재미도 있음.",
       latitude: 36.6745,
@@ -437,12 +459,14 @@ const regionColors = Object.fromEntries(
     },
     {
       id: 15,
-      imageUrl: "https://blog.kakaocdn.net/dn/HPbck/btsHVEtlXj4/xO7t7Gkha8PzUdkJZLr2xk/img.jpg",
+      imageUrl:
+        "https://blog.kakaocdn.net/dn/HPbck/btsHVEtlXj4/xO7t7Gkha8PzUdkJZLr2xk/img.jpg",
       restaurant_name: "새말해장국 본점",
       category: "한식",
       region: "오산시",
       mainMenu: ["우거지갈비탕", "얼큰내장탕", "해장국"],
-      description: "오산 3대 해장국 맛집. 돌솥밥과 함께 먹는 진한 국물 해장국으로 인기.",
+      description:
+        "오산 3대 해장국 맛집. 돌솥밥과 함께 먹는 진한 국물 해장국으로 인기.",
       address: "경기도 오산시 현충로 95",
       body: "오산 3대 해장국 맛집으로 꼽히는 지역 명소. 돌솥밥에 곁들여 먹는 우거지갈비탕과 얼큰내장탕이 인기. 내부는 다소 올드하지만 국밥 마니아들 사이에서 꾸준한 사랑을 받는 곳. 김치와 밑반찬의 맛도 수준급이며, 푸짐한 양과 진한 국물 맛이 특징. 점심시간에는 대기 가능.",
       latitude: 37.15222,
@@ -462,10 +486,10 @@ const regionColors = Object.fromEntries(
           longitude: 127.07531,
         },
       ],
-    }
-    ];
+    },
+  ];
 
-  const [placesData1, setPlacesData] = useState<Place[]>([]); // BE 에서 데이터 받아오기
+  const [placesData, setPlacesData] = useState<Place[]>([]); // BE 에서 데이터 받아오기
   const [visibleCount, setVisibleCount] = useState(10); // 현재 브라우저에 보여줄 카드의 수
 
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
@@ -475,31 +499,38 @@ const regionColors = Object.fromEntries(
 
   const categoryList = ["전체", ...Object.keys(categoryColors)];
   const regionList = ["전체", ...Object.keys(regionColors)];
-  
+
   //카테고리 선택 시 백엔드에서 데이터 fetch
   useEffect(() => {
-    const url = "http://localhost:8080/api/places"; //url 바꾸기
-    let query = "";
     const fetchPlaces = async () => {
+      let query = "";
+      if (selectCategory !== "전체") {
+        query += `category=${encodeURIComponent(selectCategory)}`;
+      }
+      if (selectRegion !== "전체") {
+        if (query !== "") query += "&";
+        query += `region=${encodeURIComponent(selectRegion)}`;
+      }
+
+      const url = `http://localhost:8080/api/posts${query ? "?" + query : ""}`;
+
       try {
-        if (selectCategory !== "전체" && selectRegion !== "전체") {
-          query = `?category=${encodeURIComponent(
-            selectCategory
-          )}&region=${encodeURIComponent(selectRegion)}`;
-        } else if (selectCategory !== "전체" && selectRegion === "전체") {
-          query = `?category=${encodeURIComponent(selectCategory)}}`;
-        } else if (selectCategory === "전체" && selectRegion !== "전체") {
-          query = `?region=${encodeURIComponent(selectRegion)}`;
-        } 
-        const res = await fetch(url + query);
+        const token = localStorage.getItem("token");
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const data = await res.json();
-        setPlacesData(data);
+        setPlacesData(data.content);
+        console.log(data.content);
         setVisibleCount(10);
       } catch (err) {
         console.error("Failed to load the data", err);
       }
     };
-    fetchPlaces();
+
+    fetchPlaces(); // 무조건 fetch 호출
   }, [selectCategory, selectRegion]);
 
   // 처음에 10개 먼저 로딩, 스크롤을 더 해 브라우저의 끝에 다다를시 해 5개씩 더 로딩하기
@@ -515,7 +546,6 @@ const regionColors = Object.fromEntries(
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  
 
   //방문 & 북마크 토글 기능 구현
   const toggleVisited = async (id: number) => {
@@ -529,12 +559,14 @@ const regionColors = Object.fromEntries(
     );
 
     const updatedVisited = !selectedPlace?.visited;
-    const url = "http://localhost:8080/api/places/" //url 바꿔야함
+    const url = "http://localhost:8080/api/posts/"; //url 바꿔야함
     try {
+      const token = localStorage.getItem("token");
       await fetch(url + id + "/visited", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ visited: updatedVisited }),
       });
@@ -552,12 +584,14 @@ const regionColors = Object.fromEntries(
       prev && prev.id === id ? { ...prev, bookmarked: !prev.bookmarked } : prev
     );
     const updatedBookmarked = !selectedPlace?.bookmarked;
-    const url = "http://localhost:8080/api/places/" //url 바꿔야함
+    const url = "http://localhost:8080/api/posts/"; //url 바꿔야함
     try {
+      const token = localStorage.getItem("token");
       await fetch(url + id + "/bookmarked", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ visited: updatedBookmarked }),
       });
@@ -566,13 +600,12 @@ const regionColors = Object.fromEntries(
     }
   };
 
-
   // selectedPlace가 존재할 경우 DetailedPage 컴포넌트를 렌더링하고, 없을 경우 기본 카드 리스트를 보여준다
   return selectedPlace ? (
     <div className="relative">
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 z-10" />
       <div className="relative z-20">
-      <DetailedPage
+        <DetailedPage
           place={selectedPlace}
           onBack={() => setSelectedPlace(null)}
           onToggleVisited={() => toggleVisited(selectedPlace.id)}
@@ -585,37 +618,45 @@ const regionColors = Object.fromEntries(
     <div className="container mx-auto mt-4 px-4">
       {/* 검색 필드*/}
       <div className="flex justify-center my-4">
-          <form 
+        <form
           className="flex items-center gap-2"
-          onSubmit={(e)=>{
+          onSubmit={(e) => {
             e.preventDefault();
-            const keyword = (e.currentTarget.elements.namedItem("searchInput") as HTMLInputElement).value;
-            const url = "http://localhost:8080/api/places" // url 바꾸기
+            const keyword = (
+              e.currentTarget.elements.namedItem(
+                "searchInput"
+              ) as HTMLInputElement
+            ).value;
+            const url = "http://localhost:8080/api/posts"; // url 바꾸기
             let query = `?search=${encodeURIComponent(keyword)}`;
-            fetch(url + query)
-            .then((res)=> res.json())
-            .then((data) => {
-              setPlacesData(data);
-              setVisibleCount(10);
+            const token = localStorage.getItem("token");
+            fetch(url + query, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             })
-            .catch((err) => console.error("검색 실패", err));
+              .then((res) => res.json())
+              .then((data) => {
+                setPlacesData(data.content);
+                setVisibleCount(10);
+              })
+              .catch((err) => console.error("검색 실패", err));
           }}
+        >
+          <input
+            type="text"
+            id="searchInput"
+            className="border border-gray-300 rounded px-2 py-1"
+            placeholder="검색어 입력"
+          />
+          <button
+            type="submit"
+            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            
-            <input
-              type="text"
-              id="searchInput"
-              className="border border-gray-300 rounded px-2 py-1"
-              placeholder="검색어 입력"
-            />
-            <button
-              type="submit"
-              className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              검색
-            </button>
-          </form>
-        </div>
+            검색
+          </button>
+        </form>
+      </div>
       {/* 드롭다운 */}
       <div className="mb-4">
         <label htmlFor="categorySelect" className="mr-2 font-semibold">
@@ -660,7 +701,7 @@ const regionColors = Object.fromEntries(
               minWidth: "200px",
               padding: "0.4rem",
             }}
-            onClick={()=>setSelectedPlace(place)}
+            onClick={() => setSelectedPlace(place)}
           >
             <div className="relative">
               <img
@@ -701,8 +742,12 @@ const regionColors = Object.fromEntries(
               >
                 {place.region}
               </span>
-              <div className="text-sm">대표 메뉴: {place.mainMenu.join(", ")}</div>
-              <div className="text-sm text-gray-500">내용: {place.description}</div>
+              <div className="text-sm">
+                대표 메뉴: {place.mainMenu.join(", ")}
+              </div>
+              <div className="text-sm text-gray-500">
+                내용: {place.description}
+              </div>
             </div>
           </div>
         ))}

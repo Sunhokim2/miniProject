@@ -6,7 +6,7 @@ import java.util.Date;
 
 import org.springframework.stereotype.Component;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.beans.factory.annotation.Value;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -15,12 +15,12 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String SECRET = dotenv.get("JWT_SECRET");
+    @Value("${jwt.secret}")
+    private String secret;
     private final long EXPIRATION = 1000 * 60 * 60;
 
-    private Key getSigningKey(){
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+    private Key getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

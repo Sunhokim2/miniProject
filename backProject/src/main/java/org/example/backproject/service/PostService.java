@@ -1,5 +1,9 @@
 package org.example.backproject.service;
 
+import org.example.backproject.dto.post.PlaceCardResponse;
+import java.util.stream.Collectors;
+
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.backproject.dto.post.PostListItemResponse;
@@ -17,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
 
     private final PostsRepository postRepository;
+    private final org.example.backproject.repository.UsersRepository usersRepository;
 
     public Page<PostListItemResponse> getPosts(Long userId, Pageable pageable, Boolean visited) {
         Page<Posts> postPage;
@@ -48,5 +53,36 @@ public class PostService {
         if (post.getUser().getId().equals(userId)) {
             post.toggleVisited(); // 내가 작성한 post일 때만 토글
         }
+    }
+
+    public Page<PlaceCardResponse> getPlaceCards(Long userId, Pageable pageable) {
+        Page<Posts> posts = postRepository.findAllByUserId(userId, pageable);
+
+        return posts.map(post -> {
+            var r = post.getRestaurant();
+            return PlaceCardResponse.builder()
+                .postId(post.getId())
+                .restaurantId(r.getId())
+                .restaurantName(r.getRestaurant_name())
+                .imageUrl(r.getImageUrl())
+                .category(r.getCategory())
+                .mainMenu(r.getMainMenu())
+                .description(r.getBody())
+                .address(r.getAddress())
+                .region(r.getRegion())
+                .latitude(Double.parseDouble(r.getLatitude()))
+                .longitude(Double.parseDouble(r.getLongitude()))
+                .rate(r.getRate())
+                .source(r.getSource())
+                .status(post.isVisited() ? "방문함" : "미방문") // 새 필드
+                .visited(post.isVisited())
+                .build();
+        });
+    }
+
+    public Long findUserIdByEmail(String email) {
+        org.example.backproject.entity.Users user = usersRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return user.getId();
     }
 }

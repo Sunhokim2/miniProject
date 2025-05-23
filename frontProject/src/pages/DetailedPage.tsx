@@ -1,6 +1,6 @@
 import React from "react";
-import "../css/Pages.css";
-import regionColors from './korea_regions_colors.json';
+import "../css/Pages.css"
+import rawRegionColors from "./korea_regions_colors.json";
 import categoryColors from './category_colors.json'
 
 interface Place {
@@ -11,7 +11,7 @@ interface Place {
   region: string;
   mainMenu: string[];
   address: string;
-  body: string;
+  description: string;
   latitude: number;
   longitude: number;
   rate: number;
@@ -35,6 +35,11 @@ interface DetailedpageProps {
   onToggleVisited: (id: number) => void;
   onToggleBookmarked: (id: number) => void;
 }
+
+  // regionColors를 객체로 변환
+  const regionColors = Object.fromEntries(
+    rawRegionColors.map(({ region, color }) => [region, color])
+  );
 
 const DetailedPage: React.FC<DetailedpageProps> = ({ place, onBack, onToggleVisited, onToggleBookmarked }) => {
   const renderStars = (rate: number) => "⭐️".repeat(rate);
@@ -140,7 +145,7 @@ const DetailedPage: React.FC<DetailedpageProps> = ({ place, onBack, onToggleVisi
         </div>
         <div className="flex mb-2">
           <div className="detail-label"></div>
-          <div className="text-left mt-3 mr-5">{place.body}</div>
+          <div className="text-left mt-3 mr-5">{place.description}</div>
         </div>
         <div className="flex justify-center mt-4">
         <button
