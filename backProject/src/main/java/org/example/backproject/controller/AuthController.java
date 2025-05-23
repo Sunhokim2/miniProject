@@ -121,4 +121,60 @@ public class AuthController {
         usersService.deleteByEmail(email);
         return ResponseEntity.ok("{\"message\": \"회원 탈퇴가 완료되었습니다.\"}");
     }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateUser(
+        @RequestBody Map<String, String> updateData,
+        Authentication authentication
+    ) {
+        if (authentication == null) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "인증되지 않은 사용자");
+            return ResponseEntity.status(401).body(error);
+        }
+
+        Object principal = authentication.getPrincipal();
+        String email;
+        if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        } else if (principal instanceof User) {
+            email = ((User) principal).getUsername();
+        } else if (principal instanceof String) {
+            email = (String) principal;
+        } else {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "알 수 없는 인증 타입");
+            return ResponseEntity.status(500).body(error);
+        }
+
+        try {
+            Users user = usersService.findByEmail(email);
+            if (user == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "사용자를 찾을 수 없습니다");
+                return ResponseEntity.status(404).body(error);
+            }
+
+            // 업데이트할 필드가 있는 경우에만 업데이트
+            if (updateData.containsKey("userName")) {
+                user.setUserName(updateData.get("userName"));
+            }
+
+            usersService.updateUser(user);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("email", user.getEmail());
+            response.put("userName", user.getUserName());
+            response.put("emailVerified", user.getEmailVerified());
+            response.put("role", user.getRole());
+            response.put("createdAt", user.getCreatedAt());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "사용자 정보 업데이트 실패: " + e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
+    }
 }

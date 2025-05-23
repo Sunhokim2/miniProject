@@ -1,37 +1,48 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User } from '@/mocks/users';
-import { users } from '@/mocks/users';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
   Paper,
   Button,
   Alert,
-  Snackbar
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
 const SettingsPage = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
-
-  // 사용자 데이터 조회
-  const { data: userData, isLoading, error } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => Promise.resolve({ data: users }),
-  });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // 설정 업데이트 뮤테이션
   const updateSettingsMutation = useMutation({
-    mutationFn: (updatedUser: User) => {
-      // 실제 API 호출로 대체될 부분
-      return Promise.resolve(updatedUser);
+    mutationFn: async (updatedUser: any) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8080/api/auth/update', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedUser)
+      });
+
+      if (!response.ok) {
+        throw new Error('설정 업데이트에 실패했습니다.');
+      }
+
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
       setSnackbar({ open: true, message: '설정이 저장되었습니다.' });
     },
     onError: () => {
@@ -39,12 +50,35 @@ const SettingsPage = () => {
     }
   });
 
-  // 현재 사용자 정보 찾기
-  const currentUser = userData?.data.find(u => u.id === user?.id);
+  // 회원탈퇴 뮤테이션
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8080/api/auth/delete', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-  if (isLoading) return <Box className="p-4">로딩 중...</Box>;
-  if (error) return <Box className="p-4">에러가 발생했습니다.</Box>;
-  if (!currentUser) return <Box className="p-4">사용자 정보를 찾을 수 없습니다.</Box>;
+      if (!response.ok) {
+        throw new Error('회원탈퇴에 실패했습니다.');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      logout();
+      navigate('/');
+      setSnackbar({ open: true, message: '회원탈퇴가 완료되었습니다.' });
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: '회원탈퇴에 실패했습니다.' });
+    }
+  });
+
+  if (!user) return <Box className="p-4">사용자 정보를 찾을 수 없습니다.</Box>;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -63,37 +97,72 @@ const SettingsPage = () => {
               <Typography variant="subtitle2" color="text.secondary" className="dark:text-gray-400">
                 사용자 이름
               </Typography>
-              <Typography className="text-gray-900 dark:text-white">{currentUser.user_name}</Typography>
+              <Typography className="text-gray-900 dark:text-white">{user.user_name}</Typography>
             </div>
             <div>
               <Typography variant="subtitle2" color="text.secondary" className="dark:text-gray-400">
                 이메일
               </Typography>
-              <Typography className="text-gray-900 dark:text-white">{currentUser.email}</Typography>
+              <Typography className="text-gray-900 dark:text-white">{user.email}</Typography>
             </div>
             <div>
               <Typography variant="subtitle2" color="text.secondary" className="dark:text-gray-400">
                 가입일
               </Typography>
               <Typography className="text-gray-900 dark:text-white">
-                {new Date(currentUser.created_at).toLocaleDateString()}
+                {new Date(user.created_at).toLocaleDateString()}
               </Typography>
             </div>
           </Box>
         </Paper>
 
-        {/* 저장 버튼 */}
-        <Box className="mt-6 flex justify-end">
+        {/* 버튼 그룹 */}
+        <Box className="mt-6 flex justify-end space-x-4">
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteForeverIcon />}
+            onClick={() => setDeleteDialogOpen(true)}
+            disabled={deleteAccountMutation.isPending}
+          >
+            회원탈퇴
+          </Button>
           <Button
             variant="contained"
             color="primary"
             startIcon={<SaveIcon />}
-            onClick={() => updateSettingsMutation.mutate(currentUser)}
+            onClick={() => updateSettingsMutation.mutate(user)}
             disabled={updateSettingsMutation.isPending}
           >
             설정 저장
           </Button>
         </Box>
+
+        {/* 회원탈퇴 확인 다이얼로그 */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>회원탈퇴 확인</DialogTitle>
+          <DialogContent>
+            <Typography>
+              정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>취소</Button>
+            <Button 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                deleteAccountMutation.mutate();
+              }}
+              color="error"
+              variant="contained"
+            >
+              탈퇴하기
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* 스낵바 */}
         <Snackbar
@@ -103,7 +172,7 @@ const SettingsPage = () => {
         >
           <Alert
             onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={updateSettingsMutation.isError ? 'error' : 'success'}
+            severity={updateSettingsMutation.isError || deleteAccountMutation.isError ? 'error' : 'success'}
           >
             {snackbar.message}
           </Alert>

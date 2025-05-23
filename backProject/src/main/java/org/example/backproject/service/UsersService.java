@@ -47,4 +47,9 @@ public class UsersService implements UserDetailsService {
         return usersRepository.findByEmail(email)
             .orElse(null);
     }
+
+    @Transactional
+    public Users updateUser(Users user) {
+        return usersRepository.save(user);
+    }
 }
