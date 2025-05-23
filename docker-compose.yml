@@ -1,54 +1,54 @@
 services:
-  frontend:
-    build:
-      context: ./frontProject
-      dockerfile: Dockerfile.dev
-      args:
-        - VITE_NAVER_CLIENT_ID=${VITE_NAVER_CLIENT_ID}
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontProject:/app
-      - /app/node_modules
-    env_file:
-      - ./.env
-    environment:
-      - NODE_ENV=development
-      - VITE_HOST=0.0.0.0
-      - VITE_PORT=5173
-      - VITE_NAVER_CLIENT_ID=${VITE_NAVER_CLIENT_ID}
-    command: npm run dev -- --host 0.0.0.0
-    networks:
-      - app-network
-    depends_on:
-      - backend
+#  frontend:
+#    build:
+#      context: ./frontProject
+#      dockerfile: Dockerfile.dev
+#      args:
+#        - VITE_NAVER_CLIENT_ID=${VITE_NAVER_CLIENT_ID}
+#    ports:
+#      - "5173:5173"
+#    volumes:
+#      - ./frontProject:/app
+#      - /app/node_modules
+#    env_file:
+#      - ./.env
+#    environment:
+#      - NODE_ENV=development
+#      - VITE_HOST=0.0.0.0
+#      - VITE_PORT=5173
+#      - VITE_NAVER_CLIENT_ID=${VITE_NAVER_CLIENT_ID}
+#    command: npm run dev -- --host 0.0.0.0
+#    networks:
+#      - app-network
+#    depends_on:
+#      - backend
 
-  backend:
-    build:
-      context: ./backProject
-      dockerfile: Dockerfile
-    container_name: ${COMPOSE_PROJECT_NAME}-backend
-    ports:
-      - "8080:8080"
-    env_file:
-      - ./.env
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-local:5432/${DB_NAME_LOCAL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER_LOCAL}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD_LOCAL}
-      - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
-      - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
-      - NAVER_MAP_ID=${NAVER_MAP_ID}
-      - NAVER_MAP_SECRET=${NAVER_MAP_SECRET}
-      - OPEN_API_URL=${OPEN_API_URL}
-      - OPEN_API_KEY=${OPEN_API_KEY}
-    volumes:
-      - ./.env:/app/.env
-    depends_on:
-      - postgres-local
-    networks:
-      - app-network
-    restart: no
+#  backend:
+#    build:
+#      context: ./backProject
+#      dockerfile: Dockerfile
+#    container_name: ${COMPOSE_PROJECT_NAME}-backend
+#    ports:
+#      - "8080:8080"
+#    env_file:
+#      - ./.env
+#    environment:
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-local:5432/${DB_NAME_LOCAL}
+#      - SPRING_DATASOURCE_USERNAME=${DB_USER_LOCAL}
+#      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD_LOCAL}
+#      - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
+#      - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
+#      - NAVER_MAP_ID=${NAVER_MAP_ID}
+#      - NAVER_MAP_SECRET=${NAVER_MAP_SECRET}
+#      - OPEN_API_URL=${OPEN_API_URL}
+#      - OPEN_API_KEY=${OPEN_API_KEY}
+#    volumes:
+#      - ./.env:/app/.env
+#    depends_on:
+#      - postgres-local
+#    networks:
+#      - app-network
+#    restart: no
 
   postgres-local:
     container_name: ${COMPOSE_PROJECT_NAME}-postgres-local

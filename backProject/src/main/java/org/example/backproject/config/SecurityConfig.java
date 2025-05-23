@@ -46,7 +46,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**", "/oauth2/authorization/**", "/api/search").permitAll()
-                .requestMatchers("/api/bookmarks/**").authenticated()
+                .requestMatchers("/api/bookmarks/**", "/api/restaurants/nearby").authenticated()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

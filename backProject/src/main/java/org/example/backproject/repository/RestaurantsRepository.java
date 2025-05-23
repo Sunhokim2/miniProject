@@ -15,7 +15,11 @@ public interface RestaurantsRepository extends JpaRepository<Restaurants, Long> 
     Optional<Restaurants> findByAddress(String address);
 
     @Query(value = "SELECT * FROM restaurant_info WHERE " +
-           "ST_Distance_Sphere(point(longitude, latitude), point(:longitude, :latitude)) <= :distance * 1000", 
+           "6371 * acos(cos(radians(CAST(:latitude AS DOUBLE PRECISION))) * " +
+           "cos(radians(CAST(latitude AS DOUBLE PRECISION))) * " +
+           "cos(radians(CAST(longitude AS DOUBLE PRECISION)) - radians(CAST(:longitude AS DOUBLE PRECISION))) + " +
+           "sin(radians(CAST(:latitude AS DOUBLE PRECISION))) * " +
+           "sin(radians(CAST(latitude AS DOUBLE PRECISION)))) <= :distance", 
            nativeQuery = true)
     List<Restaurants> findNearbyRestaurants(
         @Param("latitude") String latitude,

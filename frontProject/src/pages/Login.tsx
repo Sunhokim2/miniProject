@@ -57,6 +57,8 @@ const Login: React.FC = () => {
 
             if (response.ok) {
                 const data = await response.json();
+                // 토큰 저장
+                localStorage.setItem('token', data.token);
                 alert('Login successful!');
                 navigate('/login-landing');
             } else {

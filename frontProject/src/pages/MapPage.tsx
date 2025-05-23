@@ -32,48 +32,58 @@ const MapPage = () => {
   const [markers, setMarkers] = useState<any[]>([]); // 마커 관리를 위한 상태 추가
 
   // 현재 위치와 거리 범위를 기반으로 주변 맛집 조회
-  const { data: restaurantData, isLoading, error, refetch } = useQuery({
-    queryKey: ['restaurants', mapCenter.latitude, mapCenter.longitude, distanceRange],
+  const { data: nearbyRestaurants, isLoading, error, refetch } = useQuery({
+    queryKey: ['nearbyRestaurants', mapCenter, distanceRange],
     queryFn: async () => {
-      try {
-        console.log('Fetching nearby restaurants with params:', {
-          latitude: mapCenter.latitude,
-          longitude: mapCenter.longitude,
-          distance: distanceRange
-        });
+      if (!mapCenter) return [];
+      
+      console.log('Fetching nearby restaurants with params:', {
+        latitude: mapCenter.latitude,
+        longitude: mapCenter.longitude,
+        distance: distanceRange
+      });
 
-        const response = await fetch(`http://localhost:8080/api/restaurants/nearby?latitude=${mapCenter.latitude}&longitude=${mapCenter.longitude}&distance=${distanceRange}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Accept': 'application/json'
-          },
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
-          throw new Error(`Failed to fetch nearby restaurants: ${response.status} ${response.statusText}`);
-        }
-
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('Server did not return JSON');
-        }
-
-        const data = await response.json();
-        console.log('Fetched restaurants:', data);
-        return { data };
-      } catch (error) {
-        console.error('Error fetching nearby restaurants:', error);
-        throw error;
+      const token = localStorage.getItem('token');
+      console.log('Current token from localStorage:', token); // 토큰 확인
+      
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다. 로그인이 필요합니다.');
       }
+
+      const response = await fetch(
+        `http://localhost:8080/api/restaurants/nearby?` +
+        `latitude=${mapCenter.latitude}&` +
+        `longitude=${mapCenter.longitude}&` +
+        `distance=${distanceRange}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      // 요청 헤더 확인
+      console.log('Request headers:', {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', errorData);
+        throw new Error(`Failed to fetch nearby restaurants: ${response.status} ${errorData.message || ''}`);
+      }
+
+      const data = await response.json();
+      console.log('Received nearby restaurants:', data);
+      return data as Restaurant[];
     },
-    enabled: !!mapCenter.latitude && !!mapCenter.longitude,
-    retry: 1,
-    retryDelay: 1000
+    enabled: !!mapCenter,
+    staleTime: 1000 * 60, // 1분
+    gcTime: 1000 * 60 * 5, // 5분
   });
 
   // 네이버 지도 초기화
@@ -145,16 +155,16 @@ const MapPage = () => {
 
   // 마커 표시하기
   useEffect(() => {
-    if (!naverMapRef.current || !restaurantData?.data) return;
+    if (!naverMapRef.current || !nearbyRestaurants) return;
 
-    console.log('Updating markers with data:', restaurantData.data);
+    console.log('Updating markers with data:', nearbyRestaurants);
 
     // 기존 마커 제거
     markers.forEach(marker => marker.setMap(null));
     setMarkers([]);
 
     const newMarkers: any[] = [];
-    restaurantData.data.forEach((restaurant: Restaurant) => {
+    nearbyRestaurants.forEach((restaurant: Restaurant) => {
       const marker = new window.naver.maps.Marker({
         position: new window.naver.maps.LatLng(restaurant.latitude, restaurant.longitude),
         map: naverMapRef.current,
@@ -169,7 +179,7 @@ const MapPage = () => {
     });
 
     setMarkers(newMarkers);
-  }, [restaurantData]);
+  }, [nearbyRestaurants]);
 
   // 레스토랑 선택 핸들러
   const handleSelectRestaurant = (restaurant: Restaurant) => {

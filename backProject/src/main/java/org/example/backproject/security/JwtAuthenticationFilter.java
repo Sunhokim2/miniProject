@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -51,7 +52,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             log.error("JWT 인증 오류: {}", e.getMessage());
-            handleAuthenticationError(response, e);
+            // SQL 오류는 인증 오류로 처리하지 않음
+            if (e instanceof InvalidDataAccessResourceUsageException) {
+                filterChain.doFilter(request, response);
+            } else {
+                handleAuthenticationError(response, e);
+            }
         }
     }
 
