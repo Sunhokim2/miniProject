@@ -10,6 +10,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import { KakaoIcon, AppleIcon } from '@/components/common/SocialIcons';
 import EmailVerification from '@/components/EmailVerification';
+import { getGoogleLoginUrl } from '@/utils/oauth';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -22,6 +23,10 @@ const SignupPage = () => {
   const [error, setError] = useState<string | null>(null);
   const { signup, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleLogin = () => {
+    window.location.href = getGoogleLoginUrl();
+  };
 
   const validatePassword = () => {
     if (password !== confirmPassword) {
@@ -203,6 +208,7 @@ const SignupPage = () => {
           
           <button
             type="button"
+            onClick={handleGoogleLogin}
             className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-gray-700 hover:bg-gray-50"
           >
             <svg className="h-6 w-6 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

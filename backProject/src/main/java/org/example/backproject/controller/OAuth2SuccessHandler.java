@@ -22,13 +22,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String email = oAuth2User.getAttribute("email");
         String jwt = jwtUtil.createToken(email);
         
-        String redirectUrl = "http://localhost:5173/loginlanding?token=" + jwt;
+        // 프론트엔드로 리다이렉트
+        String redirectUrl = String.format("http://localhost:5173/oauth/callback?token=%s&email=%s", jwt, email);
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
-
-        
-
-        response.setContentType("application/json");
-        response.getWriter().write("{\"token\": \"" + jwt + "\"}");
-        response.getWriter().flush();
     }
 }
