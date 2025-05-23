@@ -45,4 +45,7 @@ public class Restaurants {
 
     private Boolean status;
     private String source;
+
+    // 이미지 URL 추가
+    private String imageUrl;
 }
