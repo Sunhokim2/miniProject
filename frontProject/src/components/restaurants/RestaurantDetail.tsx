@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -26,9 +26,20 @@ interface RestaurantDetailProps {
   onEdit?: (restaurant: Restaurant) => void;
 }
 
+// 이미지 URL을 프록시 API로 변환하는 함수
+const getProxiedImageUrl = (imageUrl: string | null) => {
+  if (!imageUrl) return undefined;
+  return `http://localhost:8080/api/proxy/image?url=${encodeURIComponent(imageUrl)}`;
+};
+
 const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps) => {
-  const [isBookmarked, setIsBookmarked] = useState(restaurant.bookmarked || false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const queryClient = useQueryClient();
+
+  // 컴포넌트 마운트 시 레스토랑 데이터 디버깅
+  useEffect(() => {
+    console.log('레스토랑 상세 데이터:', restaurant);
+  }, [restaurant]);
 
   // 북마크 추가 뮤테이션
   const addBookmarkMutation = useMutation({
@@ -60,9 +71,8 @@ const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps
 
   // 지도에서 보기 핸들러
   const handleViewOnMap = () => {
-    // TODO: 지도 중심 이동 로직
     window.open(
-      `https://map.naver.com/p/search/${encodeURIComponent(restaurant.restaurant)}/${restaurant.latitude},${restaurant.longitude}`,
+      `https://map.naver.com/p/search/${encodeURIComponent(restaurant.restaurant_name)}/${restaurant.latitude},${restaurant.longitude}`,
       '_blank'
     );
   };
@@ -86,7 +96,18 @@ const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps
         {/* 헤더 */}
         <div className="relative">
           <div className="h-40 bg-gray-200 dark:bg-gray-700">
-            {/* 여기에 이미지가 있다면 표시 */}
+            {/* 이미지 표시 (프록시 API 사용) */}
+            {restaurant.imageUrl && (
+              <img 
+                src={getProxiedImageUrl(restaurant.imageUrl)} 
+                alt={restaurant.restaurant_name || '레스토랑 이미지'} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error('이미지 로드 실패:', restaurant.imageUrl);
+                  (e.target as HTMLImageElement).src = '/placeholder-image.jpg'; // 기본 이미지 경로
+                }}
+              />
+            )}
           </div>
           <IconButton
             className="absolute top-2 right-2 bg-black bg-opacity-30 text-white hover:bg-black hover:bg-opacity-50"
@@ -110,17 +131,19 @@ const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps
         <div className="p-6">
           <div className="flex justify-between items-start mb-2">
             <Typography variant="h5" component="h2" className="font-bold text-gray-900 dark:text-white">
-              {restaurant.restaurant}
+              {restaurant.restaurant_name || '이름 없음'}
             </Typography>
-            <Rating value={restaurant.rate} readOnly precision={0.5} />
+            <Rating value={restaurant.rate || 0} readOnly precision={0.5} />
           </div>
 
-          <Chip
-            label={restaurant.category}
-            size="small"
-            className="mb-4 bg-primary text-white"
-            icon={<RestaurantIcon className="text-white" />}
-          />
+          {restaurant.category && (
+            <Chip
+              label={restaurant.category}
+              size="small"
+              className="mb-4 bg-primary text-white"
+              icon={<RestaurantIcon className="text-white" />}
+            />
+          )}
 
           <Divider className="my-4" />
 
@@ -132,7 +155,7 @@ const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps
                   주소
                 </Typography>
                 <Typography variant="body2" className="text-gray-600 dark:text-gray-400">
-                  {restaurant.address}
+                  {restaurant.address || '주소 정보 없음'}
                 </Typography>
               </div>
             </div>
@@ -144,7 +167,7 @@ const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps
                   대표 메뉴
                 </Typography>
                 <Typography variant="body2" className="text-gray-600 dark:text-gray-400">
-                  {restaurant.main_menu || '정보 없음'}
+                  {restaurant.mainMenu && restaurant.mainMenu.length > 0 ? restaurant.mainMenu.join(', ') : '정보 없음'}
                 </Typography>
               </div>
             </div>

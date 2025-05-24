@@ -1,5 +1,5 @@
 import logo from '@/assets/logo.svg';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface SearchResult {
   id: number;
@@ -14,11 +14,25 @@ interface SearchResult {
   mainMenu: string[];
   source: string;
   status: boolean;
+  imageUrl: string;
 }
+
+// 이미지 URL을 프록시 API로 변환하는 함수
+const getProxiedImageUrl = (imageUrl: string | null) => {
+  if (!imageUrl) return undefined;
+  return `http://localhost:8080/api/proxy/image?url=${encodeURIComponent(imageUrl)}`;
+};
 
 const Search = () => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 검색 결과 데이터 디버깅
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      console.log('검색 결과 데이터:', searchResults);
+    }
+  }, [searchResults]);
 
   const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,13 +95,28 @@ const Search = () => {
         <div className="w-full max-w-[800px] space-y-4">
           {searchResults.map((result) => (
             <div key={result.id} className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-2">{result.restaurant_name}</h2>
+              {/* 이미지 표시 영역 (프록시 API 사용) */}
+              {result.imageUrl && (
+                <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
+                  <img 
+                    src={getProxiedImageUrl(result.imageUrl)} 
+                    alt={result.restaurant_name || '레스토랑 이미지'} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('이미지 로드 실패:', result.imageUrl);
+                      (e.target as HTMLImageElement).src = '/placeholder-image.jpg'; // 기본 이미지 경로
+                    }}
+                  />
+                </div>
+              )}
+              
+              <h2 className="text-xl font-bold mb-2">{result.restaurant_name || '이름 없음'}</h2>
               <div className="text-gray-600 mb-2">
-                <p>주소: {result.address}</p>
-                <p>지역: {result.region}</p>
+                <p>주소: {result.address || '주소 정보 없음'}</p>
+                <p>지역: {result.region || '지역 정보 없음'}</p>
                 {result.rate && <p>평점: {result.rate}/5</p>}
               </div>
-              <p className="text-gray-700 mb-4">{result.body}</p>
+              <p className="text-gray-700 mb-4">{result.body || '내용 없음'}</p>
               {result.mainMenu && result.mainMenu.length > 0 && (
                 <div className="mb-2">
                   <p className="font-semibold">대표 메뉴:</p>

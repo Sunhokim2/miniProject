@@ -183,6 +183,7 @@ const MapPage = () => {
 
   // 레스토랑 선택 핸들러
   const handleSelectRestaurant = (restaurant: Restaurant) => {
+    console.log('선택된 레스토랑:', restaurant);
     setSelectedRestaurant(restaurant);
     setShowDetailModal(true);
   };
