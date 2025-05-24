@@ -111,20 +111,22 @@ public class SearchController {
                             .collect(Collectors.toList());
 
 //                    4. 링크리스트를 크롤링으로 넘기기 (크롤링 결과는 <링크 , 내용>)
-                    Map<String, String> crawledData = crawlingService.getBlogContent(linkList);
+                    Map<String, CrawlingService.BlogContent> crawledData = crawlingService.getBlogContent(linkList);
 
 
 //                    5. crawledData를 gpt api를 통해 분류 및 요약
                     List<Restaurants> restaurantEntities = crawledData.entrySet().stream()
                             .map(entry -> {
                                 String blogLink = entry.getKey();
-                                String blogContent = entry.getValue();
+                                CrawlingService.BlogContent blogContent = entry.getValue();
+                                String blogText = blogContent.getText();
+                                String imageUrl = blogContent.getImageUrl();
 
                                 String gptSummaryJsonString;
 
 
                                 // 1. json으로 받기
-                                gptSummaryJsonString = gptApiService.summarizeBlog(blogContent);
+                                gptSummaryJsonString = gptApiService.summarizeBlog(blogText);
                                 // 마크다운 코드 블록 제거
                                 String pureJsonString = gptSummaryJsonString.replace("```json\n", "").replace("\n```", "");
 
@@ -149,9 +151,15 @@ public class SearchController {
 
                                 if (AddressOpt.isPresent()) {
                                     System.out.println("예 존재해요.");
-                                    // 이미 존재할 경우의 로직 처리 (예: 사용자에게 알림, 기존 정보 사용 등)
-//                                    return AddressOpt.get();
-
+                                    // 이미 존재할 경우, 이미지 URL이 없다면 업데이트
+                                    Restaurants existingRestaurant = AddressOpt.get();
+                                    if ((existingRestaurant.getImageUrl() == null || existingRestaurant.getImageUrl().isEmpty()) && 
+                                        imageUrl != null && !imageUrl.isEmpty()) {
+                                        existingRestaurant.setImageUrl(imageUrl);
+                                        restaurantRepository.save(existingRestaurant);
+                                        log.info("Updated image URL for existing restaurant at address '{}': {}", summaryDto.getAddress(), imageUrl);
+                                    }
+                                    
                                     model.addAttribute("searchResultsJson","이미 DB에 있음\n"+ AddressOpt.get().getBody());
                                     return null;
                                 } else {
@@ -165,7 +173,12 @@ public class SearchController {
                                     restaurant.setMainMenu(summaryDto.getMainMenu());
                                     restaurant.setBody(summaryDto.getBody());
                                     restaurant.setRate(summaryDto.getRate());
-
+                                    
+                                    // 이미지 URL 설정
+                                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                                        restaurant.setImageUrl(imageUrl);
+                                        log.info("Set image URL for new restaurant at address '{}': {}", summaryDto.getAddress(), imageUrl);
+                                    }
 
                                     // Geocode the address to retrieve latitude and longitude
                                     List<String> geoList = null;

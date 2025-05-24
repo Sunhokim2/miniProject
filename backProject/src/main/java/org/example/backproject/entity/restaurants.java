@@ -29,11 +29,12 @@ public class Restaurants {
     // 지역명
     private String region;
     // 메인메뉴 3가지
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> mainMenu;
 
     // gpt 블로그 요약본
     @Lob // 긴 텍스트를 위한 어노테이션
+    @Basic(fetch = FetchType.EAGER)
     @Column(columnDefinition = "TEXT") // DB에 따라 TEXT 타입 지정
     private String body;
 

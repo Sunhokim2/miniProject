@@ -104,14 +104,17 @@ public class SearchBackController {
                 return ResponseEntity.ok(Map.of("message", "처리할 유효한 블로그 링크가 없습니다."));
             }
 
-            Map<String, String> crawledData = crawlingService.getBlogContent(linkList);
+            Map<String, CrawlingService.BlogContent> crawledData = crawlingService.getBlogContent(linkList);
 
             restaurantEntities = crawledData.entrySet().stream()
                     .map(entry -> {
                         String blogLink = entry.getKey();
-                        String blogContent = entry.getValue();
+                        CrawlingService.BlogContent blogContent = entry.getValue();
+                        String blogText = blogContent.getText();
+                        String imageUrl = blogContent.getImageUrl();
+                        
                         try {
-                            String gptSummaryJsonString = gptApiService.summarizeBlog(blogContent);
+                            String gptSummaryJsonString = gptApiService.summarizeBlog(blogText);
                             String pureJsonString = gptSummaryJsonString.replace("```json\n", "").replace("\n```", "");
 
                             if (pureJsonString.trim().isEmpty()) {
@@ -128,8 +131,15 @@ public class SearchBackController {
 //                            이미 있는거 리턴하는것으로 끝냄
                             Optional<Restaurants> existingRestaurantOpt = restaurantRepository.findByAddress(summaryDto.getAddress());
                             if (existingRestaurantOpt.isPresent()) {
-                                log.info("Restaurant at address '{}' already exists. Loading from DB. Source blog: {}", summaryDto.getAddress(), blogLink);
-                                return existingRestaurantOpt.get();
+                                Restaurants existingRestaurant = existingRestaurantOpt.get();
+                                // 기존 레스토랑에 이미지 URL이 없다면 업데이트
+                                if ((existingRestaurant.getImageUrl() == null || existingRestaurant.getImageUrl().isEmpty()) && 
+                                    imageUrl != null && !imageUrl.isEmpty()) {
+                                    existingRestaurant.setImageUrl(imageUrl);
+                                    restaurantRepository.save(existingRestaurant);
+                                    log.info("Updated image URL for existing restaurant at address '{}'. Source blog: {}", summaryDto.getAddress(), blogLink);
+                                }
+                                return existingRestaurant;
                             } else {
                                 log.info("Restaurant at address '{}' does not exist. Creating new entry from blog: {}", summaryDto.getAddress(), blogLink);
                                 Restaurants newRestaurant = new Restaurants();
@@ -142,6 +152,12 @@ public class SearchBackController {
                                 newRestaurant.setRate(summaryDto.getRate());
                                 newRestaurant.setSource(blogLink);
                                 newRestaurant.setStatus(true);
+                                
+                                // 이미지 URL 설정
+                                if (imageUrl != null && !imageUrl.isEmpty()) {
+                                    newRestaurant.setImageUrl(imageUrl);
+                                    log.info("Set image URL for new restaurant at address '{}': {}", summaryDto.getAddress(), imageUrl);
+                                }
 
                                 try {
                                     List<String> geoList = naverGeoCodingService.getCoordinates(summaryDto.getAddress());

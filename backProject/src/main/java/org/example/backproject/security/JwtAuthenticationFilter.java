@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.orm.jpa.JpaSystemException;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -49,16 +50,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } else if (token != null) {
                 log.debug("토큰 검증 실패");
             }
-            filterChain.doFilter(request, response);
         } catch (Exception e) {
             log.error("JWT 인증 오류: {}", e.getMessage());
-            // SQL 오류는 인증 오류로 처리하지 않음
-            if (e instanceof InvalidDataAccessResourceUsageException) {
-                filterChain.doFilter(request, response);
-            } else {
-                handleAuthenticationError(response, e);
+            // 인증 실패해도 필터 체인은 계속 진행
+            if (e instanceof JpaSystemException || e instanceof InvalidDataAccessResourceUsageException) {
+                log.error("데이터베이스 접근 오류 발생 (LOB 스트림 또는 DB 접근 문제): {}", e.getMessage(), e);
             }
+            // 인증 관련 예외가 발생해도 요청 처리는 계속 진행
+            // 인증되지 않은 상태로 SecurityContext가 유지됨
         }
+        
+        // 항상 필터 체인 계속 진행
+        filterChain.doFilter(request, response);
     }
 
     private String extractToken(HttpServletRequest request) {

@@ -19,6 +19,7 @@ public class UsersService implements UserDetailsService {
     private final UsersRepository usersRepository;
 
     @Override
+    @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         System.out.println(">> [DEBUG] 로그인 시도 이메일: " + email); // 직접 로그 추가
 
@@ -31,6 +32,7 @@ public class UsersService implements UserDetailsService {
         System.out.println(
                 ">> [DEBUG] 찾은 사용자: " + user.getEmail() + ", PW: " + user.getPassword() + ", ROLE: " + user.getRole());
 
+        // 엔티티에서 필요한 정보만 추출하여 UserDetails 객체 생성 (LOB 필드 접근 방지)
         return User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
@@ -43,6 +45,7 @@ public class UsersService implements UserDetailsService {
         usersRepository.deleteByEmail(email);
     }
 
+    @Transactional
     public Users findByEmail(String email) {
         return usersRepository.findByEmail(email)
             .orElse(null);
