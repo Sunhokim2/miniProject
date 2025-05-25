@@ -48,7 +48,11 @@ const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage', // 로컬 스토리지 키 이름
-      partialize: (state) => ({ user: state.user, token: state.token }), // 저장할 필드만 선택
+      partialize: (state) => ({ 
+        user: state.user, 
+        token: state.token, 
+        isAuthenticated: state.isAuthenticated 
+      }), // 저장할 필드에 isAuthenticated도 추가
     }
   )
 );

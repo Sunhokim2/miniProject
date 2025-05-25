@@ -28,7 +28,7 @@ const OAuthCallbackPage = () => {
     // 로컬 스토리지에 토큰 저장
     localStorage.setItem('token', token);
 
-    // 인증 상태 업데이트
+    // 인증 상태 업데이트 - 상태 스토어에 저장하고 로컬 스토리지에 유지
     setAuth({
       token,
       email,

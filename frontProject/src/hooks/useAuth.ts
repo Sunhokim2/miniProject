@@ -27,13 +27,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
       // 토큰이 있으면 사용자 정보를 서버에서 가져옴
-      fetchUserInfo();
+      fetchUserInfo(savedToken);
     }
   }, []);
 
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = async (token: string) => {
     try {
-      const token = localStorage.getItem('token');
+      // 토큰이 없으면 오류 발생
+      if (!token) {
+        throw new Error('토큰이 없습니다');
+      }
+
+      loginStart(); // 로딩 상태 시작
+
       const response = await fetch('http://localhost:8080/api/auth/me', {
         credentials: 'include',
         headers: {
@@ -43,7 +49,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (!response.ok) {
-        throw new Error('사용자 정보를 가져오는데 실패했습니다.');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Auth API Error:', response.status, errorData);
+        
+        if (response.status === 401) {
+          // 인증 만료 또는 유효하지 않은 토큰
+          localStorage.removeItem('token');
+          storeLogout();
+          throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+        }
+        throw new Error(errorData.error || '사용자 정보를 가져오는데 실패했습니다.');
       }
 
       const data = await response.json();
@@ -56,9 +71,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         created_at: data.createdAt,
       };
 
-      loginSuccess(userData, localStorage.getItem('token') || '');
+      loginSuccess(userData, token);
     } catch (err) {
       console.error('사용자 정보 조회 실패:', err);
+      loginFailure(err instanceof Error ? err.message : '인증에 실패했습니다');
     }
   };
 

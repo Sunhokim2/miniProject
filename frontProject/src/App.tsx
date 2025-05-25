@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth, AuthProvider } from '@/hooks/useAuth';
 
@@ -23,12 +23,39 @@ import LoginLanding from '@/pages/LoginLanding';
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
 
+  // 인증 상태 로딩 중이면 로딩 화면 표시
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">로딩 중...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin mb-4"></div>
+        <p className="text-lg font-medium">인증 정보 확인 중...</p>
+      </div>
+    );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  // 인증되지 않았으면 로그인 페이지로 리다이렉트
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // 인증된 경우 자식 컴포넌트 렌더링
+  return <>{children}</>;
+};
+
+// 로그인 여부에 따라 리다이렉션 처리
+const AuthRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // 인증 상태 확인이 끝났고, 이미 인증된 상태면 메인 페이지로 리다이렉트
+  if (!isLoading && isAuthenticated) {
+    return <Navigate to="/map" replace />;
+  }
+
+  // 인증되지 않았거나 로딩 중이면 자식 컴포넌트 렌더링
+  return <>{children}</>;
 };
 
 function App() {
@@ -48,8 +75,16 @@ function App() {
       <Routes>
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login" element={
+            <AuthRoute>
+              <LoginPage />
+            </AuthRoute>
+          } />
+          <Route path="/signup" element={
+            <AuthRoute>
+              <SignupPage />
+            </AuthRoute>
+          } />
           <Route path="/login-landing" element={<LoginLanding />} />
           <Route path="/oauth/callback/:provider" element={<OAuthCallbackPage />} />
         </Route>
