@@ -25,6 +25,7 @@ export interface AuthState {
 export interface Restaurant {
   id: number;
   restaurant_name: string;
+  restaurantName?: string; // API 응답에서 사용되는 필드명
   address: string;
   category: string;
   region: string;

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 interface SearchResult {
   id: number;
   restaurant_name: string;
+  restaurantName?: string;
   address: string;
   region: string;
   body: string;
@@ -17,10 +18,41 @@ interface SearchResult {
   imageUrl: string;
 }
 
-// 이미지 URL을 프록시 API로 변환하는 함수
-const getProxiedImageUrl = (imageUrl: string | null) => {
-  if (!imageUrl) return undefined;
-  return `http://localhost:8080/api/proxy/image?url=${encodeURIComponent(imageUrl)}`;
+// 기본 음식 카테고리별 이미지 (임시 대응)
+const DEFAULT_FOOD_IMAGES: Record<string, string> = {
+  '한식': 'https://cdn.pixabay.com/photo/2019/06/04/11/54/korean-food-4251686_1280.jpg',
+  '중식': 'https://cdn.pixabay.com/photo/2018/12/03/01/04/spicy-and-sour-noodles-3852590_1280.jpg',
+  '일식': 'https://cdn.pixabay.com/photo/2018/07/18/19/12/pasta-3547078_1280.jpg',
+  '양식': 'https://cdn.pixabay.com/photo/2017/12/09/08/18/pizza-3007395_1280.jpg',
+  '치킨': 'https://cdn.pixabay.com/photo/2014/01/24/04/05/fried-chicken-250863_1280.jpg',
+  '분식': 'https://cdn.pixabay.com/photo/2019/06/10/10/43/tteokbokki-4264558_1280.jpg',
+  '카페': 'https://cdn.pixabay.com/photo/2017/08/07/22/57/coffee-2608864_1280.jpg',
+  'default': 'https://cdn.pixabay.com/photo/2017/06/01/18/46/cook-2364221_1280.jpg'
+};
+
+// 카테고리에 맞는 기본 이미지 가져오기
+const getDefaultFoodImage = (category: string | undefined): string => {
+  if (!category) return DEFAULT_FOOD_IMAGES['default'];
+  
+  for (const key of Object.keys(DEFAULT_FOOD_IMAGES)) {
+    if (category.includes(key)) {
+      return DEFAULT_FOOD_IMAGES[key];
+    }
+  }
+  
+  return DEFAULT_FOOD_IMAGES['default'];
+};
+
+// 이미지 URL을 Base64 API로 변환하는 함수
+const getBase64ImageUrl = (originalUrl: string): string => {
+  if (!originalUrl) return '';
+  return `${import.meta.env.VITE_API_BASE_URL}/api/image-to-base64?url=${encodeURIComponent(originalUrl)}`;
+};
+
+// 이미지 URL을 서버에서 직접 가져오는 함수
+const getRestaurantImageUrl = (restaurantId: number | undefined): string => {
+  if (!restaurantId) return '';
+  return `${import.meta.env.VITE_API_BASE_URL}/api/restaurants/${restaurantId}/image`;
 };
 
 const Search = () => {
@@ -95,22 +127,30 @@ const Search = () => {
         <div className="w-full max-w-[800px] space-y-4">
           {searchResults.map((result) => (
             <div key={result.id} className="bg-white rounded-lg shadow-md p-6">
-              {/* 이미지 표시 영역 (프록시 API 사용) */}
-              {result.imageUrl && (
+              {/* 이미지 표시 영역 (서버에서 직접 이미지 로드) */}
+              {result.id ? (
                 <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
                   <img 
-                    src={getProxiedImageUrl(result.imageUrl)} 
+                    src={getRestaurantImageUrl(result.id)} 
                     alt={result.restaurant_name || '레스토랑 이미지'} 
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.error('이미지 로드 실패:', result.imageUrl);
-                      (e.target as HTMLImageElement).src = '/placeholder-image.jpg'; // 기본 이미지 경로
+                      console.error('이미지 로드 실패:', result.id);
+                      (e.target as HTMLImageElement).src = getDefaultFoodImage(result.category);
                     }}
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
+                  <img 
+                    src={getDefaultFoodImage(result.category)} 
+                    alt={result.restaurant_name || '레스토랑 이미지'} 
+                    className="w-full h-full object-cover"
                   />
                 </div>
               )}
               
-              <h2 className="text-xl font-bold mb-2">{result.restaurant_name || '이름 없음'}</h2>
+              <h2 className="text-xl font-bold mb-2">{result.restaurant_name || result.restaurantName || '이름 없음'}</h2>
               <div className="text-gray-600 mb-2">
                 <p>주소: {result.address || '주소 정보 없음'}</p>
                 <p>지역: {result.region || '지역 정보 없음'}</p>

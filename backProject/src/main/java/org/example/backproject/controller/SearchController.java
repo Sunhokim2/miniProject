@@ -11,6 +11,7 @@ import org.example.backproject.service.CrawlingService;
 import org.example.backproject.service.GptApiService;
 import org.example.backproject.service.NaverGeoCodingService;
 import org.example.backproject.service.NaverSearchService;
+import org.example.backproject.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
+import org.example.backproject.dto.ImageData;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
@@ -34,6 +36,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SearchController {
     private static final Logger log = LoggerFactory.getLogger(SearchController.class);
+    
+    // 테스트용 이미지 URL (Pixabay의 무료 이미지)
+    private static final String TEST_IMAGE_URL = "https://cdn.pixabay.com/photo/2017/02/15/10/39/salad-2068220_960_720.jpg";
+    
     @Autowired
     NaverSearchService naverSearchService;
     @Autowired
@@ -46,6 +52,8 @@ public class SearchController {
     RestaurantsRepository restaurantRepository;
     @Autowired
     NaverGeoCodingService naverGeoCodingService;
+    @Autowired
+    private ImageService imageService;
 
     // 루트 경로 및 검색 실행 경로 모두 이 메소드가 처리
     @GetMapping("/")
@@ -153,11 +161,52 @@ public class SearchController {
                                     System.out.println("예 존재해요.");
                                     // 이미 존재할 경우, 이미지 URL이 없다면 업데이트
                                     Restaurants existingRestaurant = AddressOpt.get();
-                                    if ((existingRestaurant.getImageUrl() == null || existingRestaurant.getImageUrl().isEmpty()) && 
-                                        imageUrl != null && !imageUrl.isEmpty()) {
-                                        existingRestaurant.setImageUrl(imageUrl);
+                                    boolean needsUpdate = false;
+                                    
+                                    if ((existingRestaurant.getImageUrl() == null || existingRestaurant.getImageUrl().isEmpty())) {
+                                        existingRestaurant.setImageUrl(TEST_IMAGE_URL);
+                                        needsUpdate = true;
+                                        log.info("테스트용 이미지 URL로 업데이트: {}", TEST_IMAGE_URL);
+                                    }
+                                    
+                                    // 이미지 데이터가 없는 경우에도 이미지 다운로드 시도
+                                    if ((existingRestaurant.getImageBytes() == null || existingRestaurant.getImageBytes().length == 0)) {
+                                        try {
+                                            ImageData imageData = crawlingService.downloadImageFromUrl(TEST_IMAGE_URL);
+                                            if (imageData != null) {
+                                                byte[] imageBytes = imageData.getData();
+                                                log.info("이미지 데이터 디버깅 - 바이트 배열 길이: {}, 타입: {}", 
+                                                        imageBytes != null ? imageBytes.length : "null", 
+                                                        imageBytes != null ? imageBytes.getClass().getName() : "null");
+                                                
+                                                if (imageBytes != null && imageBytes.length > 0) {
+                                                    byte[] copyBytes = new byte[imageBytes.length];
+                                                    System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
+                                                    existingRestaurant.setImageBytes(copyBytes);
+                                                    existingRestaurant.setImageName(imageData.getName());
+                                                    existingRestaurant.setImageType(imageData.getType());
+                                                    existingRestaurant.setImageSize((long) imageBytes.length);
+                                                } else {
+                                                    log.warn("이미지 바이트 배열이 null이거나 비어있음");
+                                                    existingRestaurant.setImageBytes(null);
+                                                    existingRestaurant.setImageName(null);
+                                                    existingRestaurant.setImageType(null);
+                                                    existingRestaurant.setImageSize(null);
+                                                }
+                                                
+                                                needsUpdate = true;
+                                                log.info("Downloaded and set image data for existing restaurant: {}, size: {} bytes", 
+                                                        existingRestaurant.getRestaurant_name(), imageData.getSize());
+                                            } else {
+                                                log.warn("Failed to download image from URL for existing restaurant: {}", TEST_IMAGE_URL);
+                                            }
+                                        } catch (Exception e) {
+                                            log.error("Error downloading image for existing restaurant: {}", e.getMessage(), e);
+                                        }
+                                    }
+                                    
+                                    if (needsUpdate) {
                                         restaurantRepository.save(existingRestaurant);
-                                        log.info("Updated image URL for existing restaurant at address '{}': {}", summaryDto.getAddress(), imageUrl);
                                     }
                                     
                                     model.addAttribute("searchResultsJson","이미 DB에 있음\n"+ AddressOpt.get().getBody());
@@ -175,9 +224,40 @@ public class SearchController {
                                     restaurant.setRate(summaryDto.getRate());
                                     
                                     // 이미지 URL 설정
-                                    if (imageUrl != null && !imageUrl.isEmpty()) {
-                                        restaurant.setImageUrl(imageUrl);
-                                        log.info("Set image URL for new restaurant at address '{}': {}", summaryDto.getAddress(), imageUrl);
+                                    log.info("테스트용 이미지 URL 사용: {}", TEST_IMAGE_URL);
+                                    restaurant.setImageUrl(TEST_IMAGE_URL);
+                                    
+                                    // 이미지 다운로드 및 저장
+                                    try {
+                                        ImageData imageData = crawlingService.downloadImageFromUrl(TEST_IMAGE_URL);
+                                        if (imageData != null) {
+                                            byte[] imageBytes = imageData.getData();
+                                            log.info("이미지 데이터 디버깅 - 바이트 배열 길이: {}, 타입: {}", 
+                                                    imageBytes != null ? imageBytes.length : "null", 
+                                                    imageBytes != null ? imageBytes.getClass().getName() : "null");
+                                            
+                                            if (imageBytes != null && imageBytes.length > 0) {
+                                                byte[] copyBytes = new byte[imageBytes.length];
+                                                System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
+                                                restaurant.setImageBytes(copyBytes);
+                                                restaurant.setImageName(imageData.getName());
+                                                restaurant.setImageType(imageData.getType());
+                                                restaurant.setImageSize((long) imageBytes.length);
+                                            } else {
+                                                log.warn("이미지 바이트 배열이 null이거나 비어있음");
+                                                restaurant.setImageBytes(null);
+                                                restaurant.setImageName(null);
+                                                restaurant.setImageType(null);
+                                                restaurant.setImageSize(null);
+                                            }
+                                            
+                                            log.info("Downloaded and set image data for new restaurant: {}, size: {} bytes", 
+                                                    summaryDto.getRestaurant_name(), imageData.getSize());
+                                        } else {
+                                            log.warn("Failed to download image from URL: {}", TEST_IMAGE_URL);
+                                        }
+                                    } catch (Exception e) {
+                                        log.error("Error downloading image: {}", e.getMessage(), e);
                                     }
 
                                     // Geocode the address to retrieve latitude and longitude

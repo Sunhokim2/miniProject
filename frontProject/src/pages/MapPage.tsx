@@ -17,6 +17,26 @@ declare global {
   }
 }
 
+// 이미지 URL을 프록시 API로 변환하는 함수
+const getProxiedImageUrl = (imageUrl: string | null) => {
+  if (!imageUrl) return undefined;
+  
+  // URL이 http로 시작하는지 확인
+  if (!imageUrl.startsWith('http')) {
+    console.warn('유효하지 않은 이미지 URL:', imageUrl);
+    return undefined;
+  }
+
+  try {
+    // URL이 유효한지 확인 (잘못된 문자가 포함되어 있는지)
+    new URL(imageUrl);
+    return `http://localhost:8080/api/proxy/image?url=${encodeURIComponent(imageUrl)}`;
+  } catch (error) {
+    console.error('URL 파싱 오류:', imageUrl, error);
+    return undefined;
+  }
+};
+
 const MapPage = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const naverMapRef = useRef<any>(null);

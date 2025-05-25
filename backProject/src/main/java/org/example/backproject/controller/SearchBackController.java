@@ -30,11 +30,17 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.example.backproject.dto.ImageData;
+import org.example.backproject.dto.RestaurantDto;
+
 @RestController
 @RequiredArgsConstructor
 public class SearchBackController {
 
     private static final Logger log = LoggerFactory.getLogger(SearchController.class);
+
+    // 테스트용 이미지 URL (Pixabay의 무료 이미지)
+    private static final String TEST_IMAGE_URL = "https://cdn.pixabay.com/photo/2017/02/15/10/39/salad-2068220_960_720.jpg";
 
     @Autowired
     NaverSearchService naverSearchService;
@@ -52,53 +58,41 @@ public class SearchBackController {
     SearchAndPostService searchAndPostService;
     @Autowired
     private PostsRepository postsRepository;
+    @Autowired
+    private ImageService imageService;
 
     // 루트 경로 및 검색 실행 경로 모두 이 메소드가 처리
     @PostMapping("/api/search")
-    @Transactional
-    public ResponseEntity<?> searchRestaurants(
-            @RequestBody SearchRequestDto searchRequest) {
-
-        String query = searchRequest.getQuery(); // DTO에서 query 추출
-
-        if (query == null || query.trim().isEmpty()) {
-            log.warn("Search query is missing or empty in request body.");
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "검색어(query)는 필수입니다. 요청 본문에 'query' 필드를 포함해줘요."));
-        }
-
-        String rawJsonResponseFromNaver = naverSearchService.search(query);
-        List<Restaurants> restaurantEntities; // 처리된 식당 엔티티 리스트
-
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<?> searchRestaurants(@RequestBody SearchRequestDto searchRequest) {
         try {
+            String query = searchRequest.getQuery();
+
+            if (query == null || query.trim().isEmpty()) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "검색어(query)는 필수입니다."));
+            }
+
+            String rawJsonResponseFromNaver = naverSearchService.search(query);
+            if (rawJsonResponseFromNaver == null) {
+                return ResponseEntity.ok(Map.of("message", "네이버 검색 결과가 없습니다."));
+            }
+
             NaverApiResponse apiResponse = objectMapper.readValue(rawJsonResponseFromNaver, NaverApiResponse.class);
-
-            List<NaverBlogItem> items = (apiResponse != null && apiResponse.getItems() != null)
-                    ? apiResponse.getItems()
-                    : Collections.emptyList();
-
-            if (items.isEmpty()) {
-                if (rawJsonResponseFromNaver.toLowerCase().contains("\"error\"")) {
-                    try {
-                        Object naverError = objectMapper.readValue(rawJsonResponseFromNaver, Object.class);
-                        return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body(naverError);
-                    } catch (JsonProcessingException e) {
-                        log.warn("Failed to parse Naver error response as JSON: {}", rawJsonResponseFromNaver);
-                        return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body(Map.of("error", "Naver API error", "details", rawJsonResponseFromNaver));
-                    }
-                }
+            if (apiResponse == null || apiResponse.getItems() == null || apiResponse.getItems().isEmpty()) {
                 return ResponseEntity.ok(Map.of("message", "검색 결과가 없습니다."));
             }
 
+            List<Restaurants> restaurantEntities; // 처리된 식당 엔티티 리스트
+
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-            List<NaverBlogItem> sortedItems = items.stream()
+            List<NaverBlogItem> sortedItems = apiResponse.getItems().stream()
                     .sorted(Comparator.comparing((NaverBlogItem item) -> LocalDate.parse(item.getPostdate(), dateFormatter)).reversed())
                     .toList();
             List<NaverBlogItem> topItemsToProcess = sortedItems.stream().limit(1).toList();
             List<String> linkList = topItemsToProcess.stream().map(NaverBlogItem::getLink).filter(Objects::nonNull).collect(Collectors.toList());
-
 
             if (linkList.isEmpty()) {
                 return ResponseEntity.ok(Map.of("message", "처리할 유효한 블로그 링크가 없습니다."));
@@ -128,17 +122,59 @@ public class SearchBackController {
                                 return null;
                             }
 
-//                            이미 있는거 리턴하는것으로 끝냄
                             Optional<Restaurants> existingRestaurantOpt = restaurantRepository.findByAddress(summaryDto.getAddress());
                             if (existingRestaurantOpt.isPresent()) {
                                 Restaurants existingRestaurant = existingRestaurantOpt.get();
+                                boolean needsUpdate = false;
+                                
                                 // 기존 레스토랑에 이미지 URL이 없다면 업데이트
-                                if ((existingRestaurant.getImageUrl() == null || existingRestaurant.getImageUrl().isEmpty()) && 
-                                    imageUrl != null && !imageUrl.isEmpty()) {
-                                    existingRestaurant.setImageUrl(imageUrl);
-                                    restaurantRepository.save(existingRestaurant);
-                                    log.info("Updated image URL for existing restaurant at address '{}'. Source blog: {}", summaryDto.getAddress(), blogLink);
+                                if ((existingRestaurant.getImageUrl() == null || existingRestaurant.getImageUrl().isEmpty())) {
+                                    existingRestaurant.setImageUrl(TEST_IMAGE_URL);
+                                    needsUpdate = true;
+                                    log.info("테스트용 이미지 URL로 업데이트: {}", TEST_IMAGE_URL);
                                 }
+                                
+                                // 이미지 데이터가 없는 경우에도 이미지 다운로드 시도
+                                if (existingRestaurant.getImageBytes() == null || existingRestaurant.getImageBytes().length == 0) {
+                                    try {
+                                        ImageData imageData = crawlingService.downloadImageFromUrl(TEST_IMAGE_URL);
+                                        if (imageData != null) {
+                                            byte[] imageBytes = imageData.getData();
+                                            log.info("이미지 데이터 디버깅 - 바이트 배열 길이: {}, 타입: {}", 
+                                                    imageBytes != null ? imageBytes.length : "null", 
+                                                    imageBytes != null ? imageBytes.getClass().getName() : "null");
+                                            
+                                            if (imageBytes != null && imageBytes.length > 0) {
+                                                byte[] copyBytes = new byte[imageBytes.length];
+                                                System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
+                                                existingRestaurant.setImageBytes(copyBytes);
+                                                existingRestaurant.setImageName(imageData.getName());
+                                                existingRestaurant.setImageType(imageData.getType());
+                                                existingRestaurant.setImageSize((long) imageBytes.length);
+                                            } else {
+                                                log.warn("이미지 바이트 배열이 null이거나 비어있음");
+                                                existingRestaurant.setImageBytes(null);
+                                                existingRestaurant.setImageName(null);
+                                                existingRestaurant.setImageType(null);
+                                                existingRestaurant.setImageSize(null);
+                                            }
+                                            
+                                            needsUpdate = true;
+                                            log.info("Downloaded and set image data for existing restaurant: {}, size: {} bytes", 
+                                                    existingRestaurant.getRestaurant_name(), 
+                                                    existingRestaurant.getImageSize());
+                                        } else {
+                                            log.warn("Failed to download image from URL: {}", TEST_IMAGE_URL);
+                                        }
+                                    } catch (Exception e) {
+                                        log.error("Error downloading image: {}", e.getMessage(), e);
+                                    }
+                                }
+                                
+                                if (needsUpdate) {
+                                    restaurantRepository.save(existingRestaurant);
+                                }
+                                
                                 return existingRestaurant;
                             } else {
                                 log.info("Restaurant at address '{}' does not exist. Creating new entry from blog: {}", summaryDto.getAddress(), blogLink);
@@ -153,10 +189,44 @@ public class SearchBackController {
                                 newRestaurant.setSource(blogLink);
                                 newRestaurant.setStatus(true);
                                 
-                                // 이미지 URL 설정
-                                if (imageUrl != null && !imageUrl.isEmpty()) {
-                                    newRestaurant.setImageUrl(imageUrl);
-                                    log.info("Set image URL for new restaurant at address '{}': {}", summaryDto.getAddress(), imageUrl);
+                                // 이미지 URL 설정 (테스트용 이미지 사용)
+                                // 원래 코드: if (imageUrl != null && !imageUrl.isEmpty()) {
+                                // 기존 imageUrl 대신 TEST_IMAGE_URL 사용
+                                log.info("테스트용 이미지 URL 사용: {}", TEST_IMAGE_URL);
+                                newRestaurant.setImageUrl(TEST_IMAGE_URL);
+                                
+                                // 이미지 다운로드 시도
+                                try {
+                                    ImageData imageData = crawlingService.downloadImageFromUrl(TEST_IMAGE_URL);
+                                    if (imageData != null) {
+                                        byte[] imageBytes = imageData.getData();
+                                        log.info("이미지 데이터 디버깅 - 바이트 배열 길이: {}, 타입: {}", 
+                                                imageBytes != null ? imageBytes.length : "null", 
+                                                imageBytes != null ? imageBytes.getClass().getName() : "null");
+                                        
+                                        if (imageBytes != null && imageBytes.length > 0) {
+                                            byte[] copyBytes = new byte[imageBytes.length];
+                                            System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
+                                            newRestaurant.setImageBytes(copyBytes);
+                                            newRestaurant.setImageName(imageData.getName());
+                                            newRestaurant.setImageType(imageData.getType());
+                                            newRestaurant.setImageSize((long) imageBytes.length);
+                                        } else {
+                                            log.warn("이미지 바이트 배열이 null이거나 비어있음");
+                                            newRestaurant.setImageBytes(null);
+                                            newRestaurant.setImageName(null);
+                                            newRestaurant.setImageType(null);
+                                            newRestaurant.setImageSize(null);
+                                        }
+                                        
+                                        log.info("Downloaded and set image data for new restaurant: {}, size: {} bytes", 
+                                                summaryDto.getRestaurant_name(), 
+                                                newRestaurant.getImageSize());
+                                    } else {
+                                        log.warn("Failed to download image from URL: {}", TEST_IMAGE_URL);
+                                    }
+                                } catch (Exception e) {
+                                    log.error("Error downloading image: {}", e.getMessage(), e);
                                 }
 
                                 try {
@@ -183,39 +253,36 @@ public class SearchBackController {
                     })
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
-//          여기까지 restaurants에 api검색으로 이미있다면 기존 DB에서 불러오고 아니라면 api로 생성한걸 넣는 리스트 생성
-//            현재는 1개만 되도록 되어있고 api검색으로 나온 address로 비교를해서 DB에 있는 유무를 따집니다.
-//            있다면 기존의 DB에서 꺼낸걸 리턴함
 
             if (restaurantEntities.isEmpty()) {
                 return ResponseEntity.ok(Map.of("message", "추출된 식당 정보가 없습니다."));
             }
 
-//            ❗❗❗개발용
+            //❗❗❗개발용
             Long currentUserId = 1L;
 
-//            실제 DB에 적재하는 서비스( Transaction )
-//            1. 만약 레스토랑 DB에 비어있다면 DB적재
-            if (restaurantRepository.findByAddress(restaurantEntities.get(0).getAddress()).isEmpty()) {
-                searchAndPostService.CreateRestaurants(restaurantEntities);
+            // 트랜잭션 처리 개선
+            try {
+                if (restaurantRepository.findByAddress(restaurantEntities.get(0).getAddress()).isEmpty()) {
+                    searchAndPostService.CreateRestaurants(restaurantEntities);
+                }
+                if (postsRepository.findByUserIdAndRestaurantName(currentUserId, restaurantEntities.get(0).getRestaurant_name()).isEmpty()) {
+                    searchAndPostService.CreatePosts(restaurantEntities, currentUserId);
+                }
+                return ResponseEntity.ok(restaurantEntities);
+            } catch (Exception e) {
+                log.error("DB 저장 중 오류 발생: {}", e.getMessage(), e);
+                throw e; // 트랜잭션 롤백을 위해 예외를 다시 던짐
             }
-//            2. 만약 posts DB 비어있다면 DB적재
-            if (postsRepository.findByUserIdAndRestaurantName(currentUserId, restaurantEntities.get(0).getRestaurant_name()).isEmpty()) {
-                searchAndPostService.CreatePosts(restaurantEntities, currentUserId);
-            }
-
-//            레스토랑 리스트를 리턴(현재는 1개 요소)
-            return ResponseEntity.ok(restaurantEntities);
 
         } catch (JsonProcessingException e) {
-            log.error("Naver API 응답 처리 중 JSON 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "결과 처리 중 오류가 발생했습니다."));
-        } catch (RestClientException e) {
-            log.error("외부 API 호출 중 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body(Map.of("error", "외부 서비스 연동 중 오류가 발생했습니다."));
+            log.error("JSON 처리 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "데이터 처리 중 오류가 발생했습니다."));
         } catch (Exception e) {
-            log.error("요청 처리 중 알 수 없는 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "서버 내부 오류가 발생했습니다."));
+            log.error("요청 처리 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "서버 내부 오류가 발생했습니다."));
         }
     }
 }

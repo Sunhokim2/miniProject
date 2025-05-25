@@ -45,7 +45,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**", "/oauth2/authorization/**", "/api/search").permitAll()
+                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**", "/oauth2/authorization/**", "/api/search", "/api/test/**").permitAll()
                 .requestMatchers("/api/bookmarks/**", "/api/restaurants/nearby").authenticated()
                 .anyRequest().authenticated()
             )
