@@ -39,8 +39,37 @@ public class RestaurantController {
         List<RestaurantDto> restaurantDtos = nearbyRestaurants.stream()
             .map(RestaurantDto::new)
             .collect(Collectors.toList());
+        
+        // 로깅 추가: 이미지 데이터 존재 여부 확인
+        for (RestaurantDto dto : restaurantDtos) {
+            log.debug("레스토랑 ID: {}, 이름: {}, 이미지Base64 존재 여부: {}", 
+                    dto.getId(), 
+                    dto.getRestaurantName(), 
+                    dto.getImageBase64() != null && !dto.getImageBase64().isEmpty());
+        }
             
         return ResponseEntity.ok(restaurantDtos);
+    }
+    
+    @GetMapping("/{id}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<RestaurantDto> getRestaurant(@PathVariable Long id) {
+        log.info("레스토랑 상세 정보 요청: ID = {}", id);
+        
+        Optional<Restaurants> restaurantOpt = restaurantsRepository.findById(id);
+        
+        if (restaurantOpt.isPresent()) {
+            Restaurants restaurant = restaurantOpt.get();
+            RestaurantDto dto = new RestaurantDto(restaurant);
+            
+            log.info("레스토랑 정보 반환: ID = {}, 이름 = {}, 이미지 있음 = {}", 
+                    dto.getId(), dto.getRestaurantName(), 
+                    dto.getImageBase64() != null && !dto.getImageBase64().isEmpty());
+            
+            return ResponseEntity.ok(dto);
+        }
+        
+        return ResponseEntity.notFound().build();
     }
     
     /**

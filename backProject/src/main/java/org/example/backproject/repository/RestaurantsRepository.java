@@ -31,7 +31,7 @@ public interface RestaurantsRepository extends JpaRepository<Restaurants, Long> 
     );
     
     // 추가: JPQL 쿼리로 변경하여 EntityGraph 적용 가능하게 함
-    @EntityGraph(attributePaths = {"mainMenu"})
+    @EntityGraph(attributePaths = {"mainMenu", "imageBytes"})
     @Query("SELECT r FROM Restaurants r WHERE " +
            "6371 * acos(cos(radians(CAST(:latitude AS double))) * " +
            "cos(radians(CAST(r.latitude AS double))) * " +

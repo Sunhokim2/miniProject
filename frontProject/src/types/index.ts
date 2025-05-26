@@ -37,6 +37,8 @@ export interface Restaurant {
   status: boolean;
   source: string;
   imageUrl: string | null;
+  imageBase64?: string; // Base64 인코딩된 이미지 데이터
+  imageType?: string;   // 이미지 타입 (예: image/jpeg)
 }
 
 // 포스트 관련 타입

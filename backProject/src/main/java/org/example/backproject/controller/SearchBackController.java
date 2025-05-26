@@ -129,45 +129,69 @@ public class SearchBackController {
                                 
                                 // 기존 레스토랑에 이미지 URL이 없다면 업데이트
                                 if ((existingRestaurant.getImageUrl() == null || existingRestaurant.getImageUrl().isEmpty())) {
-                                    existingRestaurant.setImageUrl(TEST_IMAGE_URL);
-                                    needsUpdate = true;
-                                    log.info("테스트용 이미지 URL로 업데이트: {}", TEST_IMAGE_URL);
+                                    String actualImageUrl = blogContent.getImageUrl();
+                                    if (actualImageUrl != null && !actualImageUrl.isEmpty()) {
+                                        log.info("기존 레스토랑에 크롤링한 블로그 이미지 URL 설정: {}", actualImageUrl);
+                                        existingRestaurant.setImageUrl(actualImageUrl);
+                                        needsUpdate = true;
+                                    } else {
+                                        log.info("기존 레스토랑에 테스트용 이미지 URL 설정: {}", TEST_IMAGE_URL);
+                                        existingRestaurant.setImageUrl(TEST_IMAGE_URL);
+                                        needsUpdate = true;
+                                    }
                                 }
                                 
                                 // 이미지 데이터가 없는 경우에도 이미지 다운로드 시도
                                 if (existingRestaurant.getImageBytes() == null || existingRestaurant.getImageBytes().length == 0) {
-                                    try {
-                                        ImageData imageData = crawlingService.downloadImageFromUrl(TEST_IMAGE_URL);
-                                        if (imageData != null) {
-                                            byte[] imageBytes = imageData.getData();
-                                            log.info("이미지 데이터 디버깅 - 바이트 배열 길이: {}, 타입: {}", 
-                                                    imageBytes != null ? imageBytes.length : "null", 
-                                                    imageBytes != null ? imageBytes.getClass().getName() : "null");
-                                            
-                                            if (imageBytes != null && imageBytes.length > 0) {
-                                                byte[] copyBytes = new byte[imageBytes.length];
-                                                System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
-                                                existingRestaurant.setImageBytes(copyBytes);
-                                                existingRestaurant.setImageName(imageData.getName());
-                                                existingRestaurant.setImageType(imageData.getType());
-                                                existingRestaurant.setImageSize((long) imageBytes.length);
+                                    String imageUrlToUse = existingRestaurant.getImageUrl();
+                                    if (imageUrlToUse != null && !imageUrlToUse.isEmpty()) {
+                                        try {
+                                            ImageData imageData = crawlingService.downloadImageFromUrl(imageUrlToUse);
+                                            if (imageData != null) {
+                                                byte[] imageBytes = imageData.getData();
+                                                log.info("이미지 데이터 디버깅 - 바이트 배열 길이: {}, 타입: {}", 
+                                                        imageBytes != null ? imageBytes.length : "null", 
+                                                        imageBytes != null ? imageBytes.getClass().getName() : "null");
+                                                
+                                                if (imageBytes != null && imageBytes.length > 0) {
+                                                    byte[] copyBytes = new byte[imageBytes.length];
+                                                    System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
+                                                    existingRestaurant.setImageBytes(copyBytes);
+                                                    existingRestaurant.setImageName(imageData.getName());
+                                                    existingRestaurant.setImageType(imageData.getType());
+                                                    existingRestaurant.setImageSize((long) imageBytes.length);
+                                                } else {
+                                                    log.warn("이미지 바이트 배열이 null이거나 비어있음");
+                                                    existingRestaurant.setImageBytes(null);
+                                                    existingRestaurant.setImageName(null);
+                                                    existingRestaurant.setImageType(null);
+                                                    existingRestaurant.setImageSize(null);
+                                                }
+                                                
+                                                needsUpdate = true;
+                                                log.info("기존 레스토랑 이미지 다운로드 완료: {}, 크기: {} 바이트", 
+                                                        existingRestaurant.getRestaurant_name(), 
+                                                        existingRestaurant.getImageSize());
                                             } else {
-                                                log.warn("이미지 바이트 배열이 null이거나 비어있음");
-                                                existingRestaurant.setImageBytes(null);
-                                                existingRestaurant.setImageName(null);
-                                                existingRestaurant.setImageType(null);
-                                                existingRestaurant.setImageSize(null);
+                                                log.warn("기존 레스토랑 이미지 다운로드 실패: {}", imageUrlToUse);
+                                                // 실패 시 테스트 이미지로 폴백
+                                                if (!imageUrlToUse.equals(TEST_IMAGE_URL)) {
+                                                    useTestImage(existingRestaurant);
+                                                    needsUpdate = true;
+                                                }
                                             }
-                                            
-                                            needsUpdate = true;
-                                            log.info("Downloaded and set image data for existing restaurant: {}, size: {} bytes", 
-                                                    existingRestaurant.getRestaurant_name(), 
-                                                    existingRestaurant.getImageSize());
-                                        } else {
-                                            log.warn("Failed to download image from URL: {}", TEST_IMAGE_URL);
+                                        } catch (Exception e) {
+                                            log.error("기존 레스토랑 이미지 다운로드 오류: {}", e.getMessage(), e);
+                                            // 예외 발생 시 테스트 이미지로 폴백
+                                            if (!imageUrlToUse.equals(TEST_IMAGE_URL)) {
+                                                useTestImage(existingRestaurant);
+                                                needsUpdate = true;
+                                            }
                                         }
-                                    } catch (Exception e) {
-                                        log.error("Error downloading image: {}", e.getMessage(), e);
+                                    } else {
+                                        // URL이 없는 경우 테스트 이미지 사용
+                                        useTestImage(existingRestaurant);
+                                        needsUpdate = true;
                                     }
                                 }
                                 
@@ -189,44 +213,53 @@ public class SearchBackController {
                                 newRestaurant.setSource(blogLink);
                                 newRestaurant.setStatus(true);
                                 
-                                // 이미지 URL 설정 (테스트용 이미지 사용)
-                                // 원래 코드: if (imageUrl != null && !imageUrl.isEmpty()) {
-                                // 기존 imageUrl 대신 TEST_IMAGE_URL 사용
-                                log.info("테스트용 이미지 URL 사용: {}", TEST_IMAGE_URL);
-                                newRestaurant.setImageUrl(TEST_IMAGE_URL);
-                                
-                                // 이미지 다운로드 시도
-                                try {
-                                    ImageData imageData = crawlingService.downloadImageFromUrl(TEST_IMAGE_URL);
-                                    if (imageData != null) {
-                                        byte[] imageBytes = imageData.getData();
-                                        log.info("이미지 데이터 디버깅 - 바이트 배열 길이: {}, 타입: {}", 
-                                                imageBytes != null ? imageBytes.length : "null", 
-                                                imageBytes != null ? imageBytes.getClass().getName() : "null");
-                                        
-                                        if (imageBytes != null && imageBytes.length > 0) {
-                                            byte[] copyBytes = new byte[imageBytes.length];
-                                            System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
-                                            newRestaurant.setImageBytes(copyBytes);
-                                            newRestaurant.setImageName(imageData.getName());
-                                            newRestaurant.setImageType(imageData.getType());
-                                            newRestaurant.setImageSize((long) imageBytes.length);
+                                // 이미지 URL 설정 (크롤링한 블로그에서 가져온 이미지 사용)
+                                String actualImageUrl = blogContent.getImageUrl();
+                                if (actualImageUrl != null && !actualImageUrl.isEmpty()) {
+                                    log.info("크롤링한 블로그 이미지 URL 사용: {}", actualImageUrl);
+                                    newRestaurant.setImageUrl(actualImageUrl);
+                                    
+                                    // 이미지 다운로드 시도
+                                    try {
+                                        ImageData imageData = crawlingService.downloadImageFromUrl(actualImageUrl);
+                                        if (imageData != null) {
+                                            byte[] imageBytes = imageData.getData();
+                                            log.info("이미지 데이터 디버깅 - 바이트 배열 길이: {}, 타입: {}", 
+                                                    imageBytes != null ? imageBytes.length : "null", 
+                                                    imageBytes != null ? imageBytes.getClass().getName() : "null");
+                                            
+                                            if (imageBytes != null && imageBytes.length > 0) {
+                                                byte[] copyBytes = new byte[imageBytes.length];
+                                                System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
+                                                newRestaurant.setImageBytes(copyBytes);
+                                                newRestaurant.setImageName(imageData.getName());
+                                                newRestaurant.setImageType(imageData.getType());
+                                                newRestaurant.setImageSize((long) imageBytes.length);
+                                            } else {
+                                                log.warn("이미지 바이트 배열이 null이거나 비어있음");
+                                                newRestaurant.setImageBytes(null);
+                                                newRestaurant.setImageName(null);
+                                                newRestaurant.setImageType(null);
+                                                newRestaurant.setImageSize(null);
+                                            }
+                                            
+                                            log.info("블로그 이미지 다운로드 완료: {}, 크기: {} 바이트", 
+                                                    summaryDto.getRestaurant_name(), 
+                                                    newRestaurant.getImageSize());
                                         } else {
-                                            log.warn("이미지 바이트 배열이 null이거나 비어있음");
-                                            newRestaurant.setImageBytes(null);
-                                            newRestaurant.setImageName(null);
-                                            newRestaurant.setImageType(null);
-                                            newRestaurant.setImageSize(null);
+                                            log.warn("블로그 이미지 다운로드 실패: {}", actualImageUrl);
+                                            // 실패 시 폴백으로 테스트 이미지 사용
+                                            useTestImage(newRestaurant);
                                         }
-                                        
-                                        log.info("Downloaded and set image data for new restaurant: {}, size: {} bytes", 
-                                                summaryDto.getRestaurant_name(), 
-                                                newRestaurant.getImageSize());
-                                    } else {
-                                        log.warn("Failed to download image from URL: {}", TEST_IMAGE_URL);
+                                    } catch (Exception e) {
+                                        log.error("이미지 다운로드 오류: {}", e.getMessage(), e);
+                                        // 예외 발생 시 폴백으로 테스트 이미지 사용
+                                        useTestImage(newRestaurant);
                                     }
-                                } catch (Exception e) {
-                                    log.error("Error downloading image: {}", e.getMessage(), e);
+                                } else {
+                                    // 이미지 URL이 없는 경우 테스트 이미지 사용
+                                    log.info("블로그에서 이미지를 찾을 수 없어 테스트 이미지 사용");
+                                    useTestImage(newRestaurant);
                                 }
 
                                 try {
@@ -269,7 +302,13 @@ public class SearchBackController {
                 if (postsRepository.findByUserIdAndRestaurantName(currentUserId, restaurantEntities.get(0).getRestaurant_name()).isEmpty()) {
                     searchAndPostService.CreatePosts(restaurantEntities, currentUserId);
                 }
-                return ResponseEntity.ok(restaurantEntities);
+                
+                // 엔티티 객체를 DTO로 변환하여 반환
+                List<RestaurantDto> restaurantDtos = restaurantEntities.stream()
+                    .map(RestaurantDto::new)
+                    .collect(Collectors.toList());
+                
+                return ResponseEntity.ok(restaurantDtos);
             } catch (Exception e) {
                 log.error("DB 저장 중 오류 발생: {}", e.getMessage(), e);
                 throw e; // 트랜잭션 롤백을 위해 예외를 다시 던짐
@@ -283,6 +322,35 @@ public class SearchBackController {
             log.error("요청 처리 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+    // 테스트 이미지를 사용하는 도우미 메서드
+    private void useTestImage(Restaurants restaurant) {
+        log.info("테스트용 이미지 URL 사용: {}", TEST_IMAGE_URL);
+        restaurant.setImageUrl(TEST_IMAGE_URL);
+        
+        try {
+            ImageData imageData = crawlingService.downloadImageFromUrl(TEST_IMAGE_URL);
+            if (imageData != null && imageData.getData() != null && imageData.getData().length > 0) {
+                byte[] imageBytes = imageData.getData();
+                byte[] copyBytes = new byte[imageBytes.length];
+                System.arraycopy(imageBytes, 0, copyBytes, 0, imageBytes.length);
+                restaurant.setImageBytes(copyBytes);
+                restaurant.setImageName(imageData.getName());
+                restaurant.setImageType(imageData.getType());
+                restaurant.setImageSize((long) imageBytes.length);
+                log.info("테스트 이미지 다운로드 완료: {}, 크기: {} 바이트", 
+                        restaurant.getRestaurant_name(), restaurant.getImageSize());
+            } else {
+                log.warn("테스트 이미지 다운로드 실패: {}", TEST_IMAGE_URL);
+                restaurant.setImageBytes(null);
+                restaurant.setImageName(null);
+                restaurant.setImageType(null);
+                restaurant.setImageSize(null);
+            }
+        } catch (Exception e) {
+            log.error("테스트 이미지 다운로드 오류: {}", e.getMessage(), e);
         }
     }
 }

@@ -49,7 +49,7 @@ public class Restaurants {
     // 이미지 데이터 직접 저장 (신규 필드)
     @Lob
     @Column(name = "image_bytes", nullable = true)
-    @Basic(fetch = FetchType.LAZY)
+    @Basic(fetch = FetchType.EAGER)
     @JdbcTypeCode(SqlTypes.BINARY)
     private byte[] imageBytes = null;
     

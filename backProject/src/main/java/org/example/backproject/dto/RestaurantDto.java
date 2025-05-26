@@ -58,9 +58,17 @@ public class RestaurantDto {
         this.imageSize = entity.getImageSize();
         
         // 이미지 데이터가 있는 경우 Base64로 인코딩
-        if (entity.getImageData() != null && entity.getImageData().length > 0) {
-            this.imageBase64 = "data:" + entity.getImageType() + ";base64," + 
-                              Base64.getEncoder().encodeToString(entity.getImageData());
+        byte[] imageData = entity.getImageData();
+        byte[] imageBytes = entity.getImageBytes();
+        
+        // imageData 또는 imageBytes 중 하나라도 있으면 Base64 인코딩
+        if ((imageData != null && imageData.length > 0) || (imageBytes != null && imageBytes.length > 0)) {
+            byte[] dataToEncode = (imageData != null && imageData.length > 0) ? imageData : imageBytes;
+            
+            if (dataToEncode != null && dataToEncode.length > 0) {
+                this.imageBase64 = "data:" + entity.getImageType() + ";base64," + 
+                                  Base64.getEncoder().encodeToString(dataToEncode);
+            }
         }
     }
 } 

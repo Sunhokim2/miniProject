@@ -16,6 +16,8 @@ interface SearchResult {
   source: string;
   status: boolean;
   imageUrl: string;
+  imageBase64?: string; // Base64 인코딩된 이미지 데이터
+  imageType?: string;   // 이미지 타입 (예: image/jpeg)
 }
 
 // 기본 음식 카테고리별 이미지 (임시 대응)
@@ -91,6 +93,21 @@ const Search = () => {
 
       const data = await res.json();
       console.log("서버로부터 응답:", data);
+      
+      // 더 상세한 디버깅 정보 추가
+      if (data && data.length > 0) {
+        console.log('첫 번째 결과 샘플:');
+        const first = data[0];
+        console.log('ID:', first.id);
+        console.log('이름:', first.restaurant_name || first.restaurantName);
+        console.log('imageBase64 존재 여부:', !!first.imageBase64);
+        console.log('imageType 존재 여부:', !!first.imageType); 
+        console.log('imageBase64 길이:', first.imageBase64 ? first.imageBase64.substring(0, 50) + '...' : 'null');
+        
+        // 서버에서 오는 데이터 구조 확인
+        console.log('첫 번째 결과 전체 키 목록:', Object.keys(first));
+      }
+      
       setSearchResults(data);
     } catch (err) {
       console.error("검색 실패:", err);
@@ -127,28 +144,18 @@ const Search = () => {
         <div className="w-full max-w-[800px] space-y-4">
           {searchResults.map((result) => (
             <div key={result.id} className="bg-white rounded-lg shadow-md p-6">
-              {/* 이미지 표시 영역 (서버에서 직접 이미지 로드) */}
-              {result.id ? (
-                <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
-                  <img 
-                    src={getRestaurantImageUrl(result.id)} 
-                    alt={result.restaurant_name || '레스토랑 이미지'} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error('이미지 로드 실패:', result.id);
-                      (e.target as HTMLImageElement).src = getDefaultFoodImage(result.category);
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
-                  <img 
-                    src={getDefaultFoodImage(result.category)} 
-                    alt={result.restaurant_name || '레스토랑 이미지'} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              {/* 이미지 표시 영역 (Base64 데이터 사용) */}
+              <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
+                <img 
+                  src={result.imageBase64 || getDefaultFoodImage(result.category)} 
+                  alt={result.restaurant_name || '레스토랑 이미지'} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('이미지 로드 실패:', result.id);
+                    (e.target as HTMLImageElement).src = getDefaultFoodImage(result.category);
+                  }}
+                />
+              </div>
               
               <h2 className="text-xl font-bold mb-2">{result.restaurant_name || result.restaurantName || '이름 없음'}</h2>
               <div className="text-gray-600 mb-2">

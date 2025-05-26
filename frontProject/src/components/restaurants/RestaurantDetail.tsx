@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -65,11 +65,37 @@ const getDefaultFoodImage = (category: string | undefined): string => {
 
 const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [restaurantWithImage, setRestaurantWithImage] = useState(restaurant);
   const queryClient = useQueryClient();
 
   // 컴포넌트 마운트 시 레스토랑 데이터 디버깅
   useEffect(() => {
     console.log('레스토랑 상세 데이터:', restaurant);
+    
+    // 이미지가 없는 경우 API에서 이미지 데이터를 포함한 레스토랑 정보를 가져옴
+    const fetchRestaurantWithImage = async () => {
+      if (!restaurant.imageBase64 && restaurant.id) {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`http://localhost:8080/api/restaurants/${restaurant.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('이미지 포함 레스토랑 데이터 가져옴:', data);
+            setRestaurantWithImage(data);
+          }
+        } catch (error) {
+          console.error('레스토랑 상세 정보 가져오기 실패:', error);
+        }
+      }
+    };
+    
+    fetchRestaurantWithImage();
   }, [restaurant]);
 
   // 북마크 추가 뮤테이션
@@ -102,8 +128,15 @@ const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps
 
   // 지도에서 보기 핸들러
   const handleViewOnMap = () => {
+    const restaurantName = restaurant.restaurant_name || restaurant.restaurantName || '';
+    
+    // 네이버 지도 검색 URL 형식으로 변경
+    // 레스토랑 이름으로 검색하면서 주소도 포함하여 더 정확한 결과를 얻을 수 있음
+    const searchQuery = `${restaurantName} ${restaurant.address || ''}`.trim();
+    
+    // 네이버 지도 URL - v5 검색 쿼리 방식으로 변경
     window.open(
-      `https://map.naver.com/p/search/${encodeURIComponent(restaurant.restaurant_name)}/${restaurant.latitude},${restaurant.longitude}`,
+      `https://map.naver.com/p/search/${encodeURIComponent(searchQuery)}`,
       '_blank'
     );
   };
@@ -127,24 +160,16 @@ const RestaurantDetail = ({ restaurant, onClose, onEdit }: RestaurantDetailProps
         {/* 헤더 */}
         <div className="relative">
           <div className="h-40 bg-gray-200 dark:bg-gray-700">
-            {/* 이미지 표시 (서버에서 직접 이미지 데이터 로드) */}
-            {restaurant.id ? (
-              <img 
-                src={getRestaurantImageUrl(restaurant.id)} 
-                alt={restaurant.restaurant_name || restaurant.restaurantName || '레스토랑 이미지'} 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  console.error('이미지 로드 실패:', restaurant.id);
-                  (e.target as HTMLImageElement).src = getDefaultFoodImage(restaurant.category);
-                }}
-              />
-            ) : (
-              <img 
-                src={getDefaultFoodImage(restaurant.category)} 
-                alt={restaurant.restaurant_name || restaurant.restaurantName || '레스토랑 이미지'} 
-                className="w-full h-full object-cover"
-              />
-            )}
+            {/* 이미지 표시 (Base64 데이터 사용) */}
+            <img 
+              src={restaurantWithImage.imageBase64 || getDefaultFoodImage(restaurantWithImage.category)} 
+              alt={restaurantWithImage.restaurant_name || restaurantWithImage.restaurantName || '레스토랑 이미지'} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('이미지 로드 실패:', restaurantWithImage.id);
+                (e.target as HTMLImageElement).src = getDefaultFoodImage(restaurantWithImage.category);
+              }}
+            />
           </div>
           <IconButton
             className="absolute top-2 right-2 bg-black bg-opacity-30 text-white hover:bg-black hover:bg-opacity-50"
